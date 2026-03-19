@@ -1595,8 +1595,7 @@
   \fi
 }
 \if@ACM@journal\else
-\acmConference[Conference'17]{ACM Conference}{July 2017}{Washington,
-  DC, USA}%
+\acmConference[]{}{}{}%
 \fi
 \def\acmBooktitle#1{\gdef\@acmBooktitle{#1}}
 \acmBooktitle{}
@@ -1948,7 +1947,7 @@
   \fi\fi\fi}
 \def\ccsdesc@parse@finish#1\ccsdesc@parse@end{}
 \newif\if@printcopyright
-\@printcopyrighttrue
+\@printcopyrightfalse
 \newif\if@printpermission
 \@printpermissionfalse
 \newif\if@acmowned
@@ -2280,19 +2279,10 @@
     \fi
     \if@ACM@manuscript\else
        \if@ACM@journal@bibstrip\else % Print the conference information
-         \if@ACM@engage
-            {\itshape \@acmBooktitle, \@acmYear.}\par
-         \else
-         {\itshape \acmConference@shortname, \acmConference@venue}\par
-         \fi
        \fi
     \fi
     \if@printcopyright
       \copyright\ \@copyrightyear\ \@copyrightowner\\
-    \else
-      \ifx\@copyrightyear\@empty\else
-        \@copyrightyear.\
-      \fi
     \fi
     \if@ACM@manuscript
       Manuscript submitted to ACM\\
@@ -2313,13 +2303,6 @@
           \fi\\
         \else
           \if@ACM@nonacm\else
-            \if@ACM@journal@bibstrip
-              ACM~\@permissionCodeTwo/\@acmYear/\@acmMonth-ART\@acmArticle\\
-              \@formatdoi{\@acmDOI}%
-            \else % Conference
-              \ifx\@acmISBN\@empty\else ACM~ISBN~\@acmISBN\\\fi
-              \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi%
-            \fi
           \fi
         \fi
       \fi}%
