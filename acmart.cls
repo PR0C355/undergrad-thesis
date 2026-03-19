@@ -1950,7 +1950,7 @@
 \newif\if@printcopyright
 \@printcopyrighttrue
 \newif\if@printpermission
-\@printpermissiontrue
+\@printpermissionfalse
 \newif\if@acmowned
 \@acmownedtrue
 \define@choicekey*{ACM@}{acmcopyrightmode}[%
@@ -1959,9 +1959,9 @@
     usgov,usgovmixed,cagov,cagovmixed,licensedusgovmixed,%
     licensedcagov,licensedcagovmixed,othergov,licensedothergov,%
     iw3c2w3,iw3c2w3g,cc}{%
-  \@printpermissiontrue
-  \@printcopyrighttrue
-  \@acmownedtrue
+  \@printpermissionfalse
+  \@printcopyrightfalse
+  \@acmownedfalse
   \ifnum\acm@copyrightmode=0\relax % none
    \@printpermissionfalse
    \@printcopyrightfalse
