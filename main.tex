@@ -44,6 +44,7 @@
 %% for your publication.
 %%
 %%
+% \documentclass[sigconf,natbib=false]{acmart}
 \documentclass[sigconf,natbib=false]{acmart}
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
@@ -459,14 +460,17 @@ Despite testing high-level understanding, General questions are held to strict o
 
 \subsection{Video Sourcing \& Selection Criteria}
 
-YouTube videos are an ideal source for large-scale, real-world video data due to their diversity, availability of metadata, and variety of content types. We perform large-scale crawling of YouTube videos, before filtering by duration (target: 5-60 minutes to qualify as "long-form"), content type (instructional, narrative, procedural, sports, vlogs), availability of metadata, and Creative Commons or fair-use licensing considerations. We also apply a visual diversity filter to ensure the videos contain sufficient temporal dynamics to warrant temporal reasoning questions. To quantify this, we compute a "delta" score for each video, representing the average visual change across sampled frames, using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are filtered out to ensure our dataset emphasizes temporal dynamics. Contrast with Video-MME's \cite{videomme} manual curation of 900 videos, ChronoQA achieves \textbf{44$\times$ the video count} through automation while maintaining quality via multi-stage filtering.
+YouTube videos are an ideal source for large-scale, real-world video data due to their diversity, availability of metadata, and variety of content types. We perform large-scale crawling of YouTube videos, before filtering by duration (target: 5-60 minutes to qualify as "long-form"), content type (instructional, narrative, procedural, sports, vlogs), availability of metadata, and Creative Commons or fair-use licensing considerations. We also apply a visual diversity filter to ensure the videos contain sufficient temporal dynamics to warrant temporal reasoning questions. To quantify this, we compute a "delta" score for each video, representing the average visual change across sampled frames, using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are filtered out to ensure our dataset emphasizes temporal dynamics. 
+% Contrast with Video-MME's \cite{videomme} manual curation of 900 videos, ChronoQA achieves \textbf{44$\times$ the video count} through automation while maintaining quality via multi-stage filtering.
 
 \subsection{Caption Generation Pipeline}
 
-In order to obtain precise event timestamps, we segment the videos to produce $N$ fixed-length clips of $10$ seconds long each. Each segment is then passed through the QwenVL processor, which samples the video frames at $1$ frame per second, and then projects them into a pixel-budget space of $T_{video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget for the entire video.
+In order to obtain precise event timestamps, we segment the videos to produce $N$ fixed-length clips of $10$ seconds long each. Each segment is then passed through the QwenVL processor, which samples the video frames at $1$ frame per second, and then projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget for each sampled frame from the entire video.
 
 % TODO: Section about the importance of segment lengths? We looked at 10s, 20s, and 30s.
 % 5s probably too expensive, 20s and 30s had their own caveats. Refer to slides for more info.
+
+We experimented with different fixed-length clips (10s, 20s, and 30s) to understand the impact of temporal granularity on caption quality and downstream question generation. The choice of segment length affects the level of detail in the captions, with shorter segments (like 10s) providing more granular descriptions of specific moments, while longer segments (like 30s) capture broader events and themes. We found that 10-second segments strike a good balance, providing sufficient temporal resolution to capture distinct events without overwhelming the model with too much information in a single segment. Longer segments tended to produce more generalized captions that missed finer details, while shorter segments increased computational costs without significant gains in caption quality.
 
 \subsubsection{Caption Token Budget}
 
@@ -643,7 +647,6 @@ Following the standard temporal grounding evaluation protocol, temporal IoU (tIo
 }
 
 where $a_{i}, b_{i}$ are the start and end timestamps of the $i$-th ground truth interval of $G$. $c_{j}, d_{j}$ are the start and end timestamps of the $j$-th predicted interval of $P$. We calculate the mean IoU (mIoU) by averaging the tIoU scores obtained by the model across all question queries. 
-
 \begin{equation}
   \text{mIoU} = \frac{1}{N} \sum_{i=1}^{N} \text{tIoU}_{i}
 \end{equation}
@@ -682,8 +685,6 @@ Four baseline conditions are evaluated to establish lower bounds and verify benc
         Text-only & Question + options (no video) & Confirm linguistic shortcut resistance & $<$ 20\% \\ 
         \addlinespace
         Single-frame & 1 random frame + question & Confirm temporal multi-frame requirement & $<$ 30\% \\ 
-        \addlinespace
-        Audio/ASR-only & Transcript + question (no frames) & Quantify auditory contribution & Report as-is \\ 
         \addlinespace
         Human & Full video + question & Establish performance ceiling & $\sim$85\% \\ 
         \bottomrule
