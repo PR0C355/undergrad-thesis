@@ -195,7 +195,7 @@ assistants for complex, real-world tasks.
 % \keywords{Do, Not, Use, This, Code, Put, the, Correct, Terms, for,
 %   Your, Paper}
 
-\received{16 March 2026}
+% \received{16 March 2026}
 % \received[revised]{12 March 2009}
 % \received[accepted]{5 June 2009}
 
@@ -214,12 +214,12 @@ human evaluation expertise of long-form content and media.
 
 % CITE ALL OF THESE
 Existing image-based benchmarks like MMBench \cite{mmbench}, MMMU \cite{mmmu}, MMStar \cite{mmstar}, and MM-Vet \cite{mmvet}
-evaluate spatil perception and reasoning, but are entirely atemporal. Video MCQ
+evaluate spatial perception and reasoning, but are entirely atemporal. Video MCQ
 benchmarks like Video-MME \cite{videomme}, MVBench \cite{mvbench}, and EgoSchema \cite{egoschema} test temporal understanding, but
 do not require models to produce or verify timestamp-level answers. MVBench's
 "Action Localization" task uses only coarse temporal bins like beginning, middle,
 or end, not precise timestamps. Traditional temporal grounding datasets like
-Charades-Ego \cite{charadesego}, as well as it's predecessor Charades \cite{charades}, and ActivityNet-QA \cite{activitynetqa}, require
+Charades-Ego \cite{charadesego}, as well as its predecessor Charades \cite{charades}, and ActivityNet-QA \cite{activitynetqa}, require
 open-ended timestamp regression, not a standardized MCQ evaluation, and operates on
 short videos with known distributional biases.
 
@@ -278,14 +278,14 @@ a specific moment in the video. We present three core contributions:
 
   \item Qwen2-VL \cite{qwen2-vl} and Qwen3-VL \cite{qwen3-vl}: Supports dynamic resolution and native video processing with strong performance on short video benchmarks. ChronoQA uses Qwen3-VL-30B as its caption generation backbone, leveraging its efficient visual token budget mechanism for per-segment captioning.
 
-  \item Molmo \cite{molmo}: A family of open vision-language models developed by the Allen Institute for AI. The more recent member of the family, Molmo 2 \cite{molmo2} image understanding, introducing spatio-temporal grounding capabilities and video tracking.
+  \item Molmo \cite{molmo}: A family of open vision-language models developed by the Allen Institute for AI. The more recent Molmo 2 \cite{molmo2} extends this to video and multi-image understanding, introducing spatio-temporal grounding capabilities and video tracking.
 \end{itemize}
 
 Throughout these models, we notice a common architectural pattern. The model consists of a vision encoder (SigLIP \cite{siglip}, InternViT \cite{internvl}, etc.), which projects visual tokens into the language token space, before being paired with an LLM backbone. This pattern processes videos as sequences of sampled frames, abandoning the fine-grained temporal information between frames.
 
 SpookyBench \cite{spookybench} tests 15 state-of-the-art video VLMs on tasks requiring encoding information purely in temporal sequences, finding 0\% accuracy across all models, while humans scored over 98\%.
 
-Current state-of-the-art VLMs struggle with spatiotemporal awareness. \cite{vlm4d} illustrates this, showing models can still fail at basic physical movement, often struggling to distinguish between clockwise/counter-clockwise rotations or simple lateral movements (e.g., a car moving right being labeled as moving left). This motivates a benchmark focused on temporal grounding, assessing how things change over time, rather than just spatial comprehension.
+Current state-of-the-art VLMs struggle with spatiotemporal awareness. VLM4D \cite{vlm4d} illustrates this, showing models can still fail at basic physical movement, often struggling to distinguish between clockwise/counter-clockwise rotations or simple lateral movements (e.g., a car moving right being labeled as moving left). This motivates a benchmark focused on temporal grounding, assessing how things change over time, rather than just spatial comprehension.
 
 % THIS IS STILL A MAYBE, IDK IF I LIKE IT
 % Most benchmarks reward a model for recognizing a "dog" and a "ball" (spatial), but they don't
@@ -334,7 +334,8 @@ Rows: MMBench, MMMU, MMStar, Video-MME, MVBench, EgoSchema, TemporalBench,
 \subsection{Prior Temporal Understanding Work}
 
 \paragraph{\textbf{Temporal Sentence Grounding in Videos (TSGV).}}
-Given a long-form video $V$ and a natural language question $Q$ that references a temporal event or transition, select the correct answer $a_{i}$ from a set of \textbf{five} options $\{a_1, a_2, a_3, a_4, a_5\}$, where each option consists of a \textbf{textual description} paired with a \textbf{timestamp interval} $[t^i_{start},\ t^i_{end}]$ indicating the video segment that description refers to.
+Given a video $V$ and a natural language query $Q$, predict a set of temporal segments $\mathcal{P} = \{(c_j, d_j)\}_{j=1}^{K}$ such that each interval $[c_{j}, d_{j}]$ corresponds to a portion of $V$ where the event described by $Q$ occurs.
+% that references a temporal event or transition, select the correct answer $a_{i}$ from a set of \textbf{five} options $\{a_1, a_2, a_3, a_4, a_5\}$, where each option consists of a \textbf{textual description} paired with a \textbf{timestamp interval} $[t^i_{start},\ t^i_{end}]$ indicating the video segment that description refers to.
 
 \paragraph{\textbf{Known Biases in Temporal Grounding Benchmarks.}}
 Yuan et al. \cite{tgsv} demonstrate that current TSGV models tend to exploit moment annotation biases in Charades-STA and ActivityNet Captions rather than learning genuine multimodal grounding. This occurs to the extent that several extremely simple baselines without any training can match state-of-the-art methods on standard (IID) test splits. To expose and measure this problem, they introduce Charades-CD and ActivityNet-CD, resplits in which the ground-truth moment distribution of the test set is deliberately shifted relative to the training set. These resplits provide a more reliable evaluation of true grounding capability, and are used as a standard OOD generalization benchmark in subsequent work.
@@ -437,7 +438,7 @@ Despite testing high-level understanding, General questions are held to strict o
 \subsection{Design Principles}
 
 \begin{itemize}
-  \item \textbf{Timestamp anchoring prevents linguistic shortcuts} (addresses MMStar's \cite{mmstar} finding that 42.9\% of MMMU is solvable text-only): Every distractor answer is paired with a plausible but incorrect timestamp, so surface-level language patterns cannot distinguish correct from incorrect options.
+  \item \textbf{Temporal grounding prevents linguistic shortcuts} (addresses MMStar's \cite{mmstar} finding that 42.9\% of MMMU is solvable text-only): All answer options reference the same video segment, so models cannot eliminate distractors by comparing timestamps. Only genuine visual inspection of the segment can distinguish correct from incorrect descriptions.
   \item \textbf{Long-form videos prevent single-frame solving} (addresses MMBench-Video's \cite{mmbenchvideo} finding that 1-frame sometimes matches 8-frame performance): Questions require reasoning over events separated by minutes, not seconds, preventing single-frame solving.
   \item \textbf{Balanced answer distributions prevent position bias} (adopts MMBench's \cite{mmbench} CircularEval insight): Correct answers are uniformly distributed across positions $A, B, C, D, E$.
   \item \textbf{Five-option MCQ enables standardized evaluation} (addresses Charades-STA/ActivityNet Captions' reliance on IoU-based regression metrics): ChronoQA uses accuracy, the universal metric of VLM benchmarks, while encoding temporal precision through timestamp pairing.
@@ -621,7 +622,7 @@ where $N$ is the total number of questions, $\hat{a}_i$ is the model's selected 
 
 QA Accuracy is reported at two levels of granularity:
 \begin{itemize}
-  \item \textbf{Overall Accuracy}: Compupted across all questions in the dataset.
+  \item \textbf{Overall Accuracy}: Computed across all questions in the dataset.
   \item \textbf{Per-Category Accuracy}: separately for each of the five task categories (Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, General).
 \end{itemize}
 
@@ -652,7 +653,7 @@ where $a_{i}, b_{i}$ are the start and end timestamps of the $i$-th ground truth
 \end{equation}
 
 \paragraph{\textbf{Eliciting Timestamp Predictions.}}
-Since ChronoQA is an MCQ benchmark and most evaluated models are not natively trained for timestamp regression, timestamp predictions are obtaiend with a structured prompting strategy. After selecting an answer option, models are further prompted to output the specific timestamp interval within the video that they believe best supports their answer (e.g., "State the start and end time in seconds of the video segment that directly answers this question."). This protocol follows the white-box evaluation paradigm of CG-Bench, which requires models to explicitly output grounding intervals alongside their MCQ selections.
+Since ChronoQA is an MCQ benchmark and most evaluated models are not natively trained for timestamp regression, timestamp predictions are obtained with a structured prompting strategy. After selecting an answer option, models are further prompted to output the specific timestamp interval within the video that they believe best supports their answer (e.g., "State the start and end time in seconds of the video segment that directly answers this question."). This protocol follows the white-box evaluation paradigm of CG-Bench, which requires models to explicitly output grounding intervals alongside their MCQ selections.
 
 For models that refuse, or fail, to produce a parseable timestamp (e.g., outputting a range covering the full video or a null response), a fallback interval of $[0,T]$ (full video duration) is assigned, yielding a tIoU score proportional to the fraction of the video covered by the ground-truth interval. This penalizes uninformative outputs without zeroing them entirely.
 
@@ -674,7 +675,7 @@ If a model explicitly refuses to answer, or if both extraction stages fail, the 
 \subsection{Baseline Configurations}
 Four baseline conditions are evaluated to establish lower bounds and verify benchmark integrity. All baselines use the same answer extraction pipeline.
 
-\begin{table*}[ht]
+\begin{table*}
     \centering
     \begin{tabular}{llll}
         \toprule
@@ -687,6 +688,8 @@ Four baseline conditions are evaluated to establish lower bounds and verify benc
         Single-frame & 1 random frame + question & Confirm temporal multi-frame requirement & $<$ 30\% \\ 
         \addlinespace
         Human & Full video + question & Establish performance ceiling & $\sim$85\% \\ 
+        \addlinespace
+        Audio/ASR-only & Transcript + question (no frames) & Determine auditory impact & Report as-is \\
         \bottomrule
     \end{tabular}
     \caption{Baseline Evaluation Metrics}
