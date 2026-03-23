@@ -157,35 +157,33 @@
 %% Needs headline result once experiments run.
 \begin{abstract}
 The expanding use of large language models in intelligent workflows
-has triggered rapid advancement in Multimodal Large Language models.
-Existing artificial intelligence models are excellent at identifying
-objects in a single image, but still struggle to cohesively
-"understand" a 30-minute video. Most existing benchmarks only test a
-model's ability to summarize a video or recognize a specific action
+has triggered rapid advancement in Multimodal Large Language models (MLLM).
+Existing models are excellent at identifying objects in a single image,
+or captioning short video clips, but still struggle to cohesively
+"understand" a 30-minute video. Most existing MLLM benchmarks only assess a
+model's ability to summarize a video or recognize specific actions
 (like someone running). However, accurate video understanding
 requires the ability to precisely determine when an event occurred
-and how it relates to other events in the timeline, a process known
-as temporal grounding, and a currently neglected but critical
-challenge. Without temporal grounding, artificial intelligence cannot
-reliably assist in fields like medical surgery review, security
-monitoring, or long-form video data analysis.
+and how it relates to other events in the timeline, a currently neglected
+but critical challenge, known as temporal grounding. Without it, artificial intelligence cannot reliably assist in fields like medical surgery review,
+security monitoring, or long-form video data analysis.
 
-This research focuses on the automated generation of high-quality
-testing benchmarks and data for Vision-Language Models (VLMs).
-Despite struggling with longer videos, existing models perform
-relatively well on shorter video segments, especially when used with
-higher frame sampling rates. Using foundational VLMs and
-state-of-the-art Large Language Models (LLMs), we transform raw
-YouTube videos into varied, complex, multiple-choice questions.
-Every correct answer is paired with a specific timestamp, forcing
-the model to prove when it actually saw the video evidence rather
-than guessing based on linguistic context.
+One of the primary reasons temporal grounding remains unsolved is a
+lack of large-scale high-quality benchmarks to evaluate it. Existing
+datasets are too small, narrow, or do not require models to localize
+evidence to specific timestamps. Creating such a benchmark through standard
+methods would require lengthy manual annotation procedures. Instead, we exploit
+foundational Vision-Language Models' (VLMs) performance on short clips
+to transform raw YouTube videos into complex multiple-choice questions,
+pairing every correct answer with a temporal segment. This allows us to separately 
+evaluate a model's answer accuracy and its temporal localization ability in two distinct passes, distinguishing whether the model genuinely understood the video
+or simply guessed the answer correctly from linguistic context.
 
-Designed to work with our 40,000+ video dataset, this project can
-scale to even larger datasets to create a robust evaluation set of
-unique question-answer pairs. By providing a rigorous method for
-evaluating the temporal and sequential capabilities of video models,
-we offer the "ruler" needed to build more reliable, context-aware AI
+Designed to work with our 40,000+ video dataset and scalable to even larger
+collections, our pipeline can generate a robust, diverse evaluation set of unique question-answer pairs at scale, which is infeasible through manual annotation. By
+providing a rigorous, scalable method for evaluating the temporal and
+sequential capabilities of video models, we offer the "ruler" necessary
+to drive and measure our progress towards more reliable, context-aware AI
 assistants for complex, real-world tasks.
 \end{abstract}
 
