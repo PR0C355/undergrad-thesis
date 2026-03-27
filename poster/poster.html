@@ -107,15 +107,18 @@
   }
 
   /* ── PIPELINE ── */
-  .pipeline { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; }
-  .pipeline-row { display: flex; align-items: flex-start; gap: 10px; }
+  .pipeline { display: flex; flex-direction: column; gap: 0; margin: 10px 0; }
+  .pipeline-row {
+    display: flex; flex-direction: column; align-items: stretch;
+    border: 1px solid #b8c0d8; border-radius: 5px; overflow: hidden; background: #fff;
+  }
   .pipeline-box {
-    background: #2c3e6e; color: #fff; padding: 6px 12px; border-radius: 4px;
-    font-size: 0.76rem; font-weight: 600; min-width: 148px; text-align: center; flex-shrink: 0; font-family: sans-serif;
+    background: #2c3e6e; color: #fff; padding: 5px 10px;
+    font-size: 0.74rem; font-weight: 600; text-align: center; font-family: sans-serif;
   }
   .pipeline-box.alt { background: #4a5a8e; }
-  .pipeline-desc { color: #444; font-size: 0.75rem; font-style: italic; line-height: 1.5; padding-top: 5px; }
-  .pipe-arrow { text-align: center; color: #7a8ab0; font-size: 1rem; line-height: 1; padding: 1px 0 1px 74px; }
+  .pipeline-desc { color: #444; font-size: 0.72rem; font-style: italic; line-height: 1.5; padding: 6px 9px; }
+  .pipe-arrow { text-align: center; color: #7a8ab0; font-size: 0.95rem; line-height: 1; padding: 3px 0; }
 
   /* ── CATEGORY CARDS ── */
   .cat-grid { display: grid; grid-template-columns: 1fr; gap: 7px; margin: 10px 0; }
