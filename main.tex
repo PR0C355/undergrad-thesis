@@ -223,7 +223,7 @@ Our contributions are:
 
 
 \todo{Add 2D scatter plot figure (Temporal Granularity vs Video Duration) positioning ChronoQA}
-\todo{Add sample ChronoQA question figure showing video timeline, question text, five answer options each with paired timestamps, and the correct answer highlighted}
+sa\todo{Add sample ChronoQA question figure showing video timeline, question text, five answer options each with paired timestamps, and the correct answer highlighted}
 
 
 %%
@@ -235,44 +235,18 @@ Our contributions are:
 % Structured, critical review of VLM architectures, benchmarks, and temporal/video
 % understanding. Establishing where each falls short and how ChronoQA addresses that gap.
 
-\subsection{VLM Architectures}
+\subsection{Vision-Language Models for Video}
+Current VLMs share a common architectural pattern: a vision encoder (SigLIP \cite{siglip}, InternViT \cite{internvl}, etc.) converts sampled frames into patch tokens, which are projected into the token space of an LLM backbome. This frame-sampling design is the primary bottleneck for temporal grounding, as inter-frame temporal signals are discarded, and fine-grained motion or transition information depends entirely on frame sampling density.
 
-\subsubsection{Proprietary Frontier Models}
+Proprietary models attempt to address this constraint through larger context windows. Gemini 2.5 Pro supports approximately 6 hours of video sampled at 1 fps within a 2-million-token context length \cite{gemini2.5-video}, achieving 82\% on Video-MME. Gemini 3 Pro reduces this context window to 1 million tokens while improving multi-step reasoning. Unlike GPT-4, the natively multimodal GPT-5 scores 86.7\% on Video-MME, and up to 78.4\% on MMMU. Even with these expanded context windows, VLMs are shown to exhibit a degradation in performance as video duration increases \cite{longvideosurvey}, indicating that simply increasing context length is insufficient for resolving temporal grounding limitations. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
 
-\begin{itemize}
-  \item GPT-4o \cite{gpt-4} \cite{gpt-4o} and GPT-5 \cite{gpt-5}: GPT-4o is an "omni" model trained end-to-end across text, vision, and audio. Native multimodal capabilities include image understanding, video input, and long-context windows exceeding 128K tokens. GPT-5 extends these capabilities with improved instruction following and multimodal reasoning. GPT-5 excels across a range of multimodal benchmarks spanning visual, video-based, spatial, and scientific reasoning, with GPT-5.1 scoring 85.4\% on MMMU. Unlike GPT-4o, GPT-5 is natively multimodal, meaning its visual and text capabilities were developed alongside each other throughout training, unlike GPT-4, and can natively support video. 
+While humans achieve over 98\% accuracy on SpookyBench \cite{spookybench}, fifteen state-of-the-art VLMs failed to identify any content, scoring 0\%. This categorical failure highlights a critical time-blindness in current architectures, which rely heavily on spatial features and struggle to decode information presented through purely temporal noise sequences, directly motivating ChronoQA's focus.
 
-  \item Gemini \cite{gemini1.0} \cite{gemini2.5}: The Gemini 1.0 family of models is a series of multimodal models, trained jointly across image, audio, video, and text data. Gemini 1.5 Pro's performance on Video-MME drops approximately 14.3\% from short to long videos, illustrating the challenge of temporal grounding even for models with native long-video processing capabilities. The Gemini API offers a 'low' media resolution parameter enabling Gemini 2.5 Pro, the next generation model in the Gemini family, to process up to \~6 hours of video with a 2 million token context \cite{gemini2.5-video}, achieving 84.7\% accuracy on VideoMME. Gemini 3 Pro \cite{gemini3}, the most recent addition to the Gemini family, outperforms Gemini 2.5 Pro in speed, coding, and complex, multi-step reasoning, and similar video context capabilities, but with a 1 million token context window.
+Current state-of-the-art VLMs struggle with spatio-temporal awareness. VLM4D \cite{vlm4d} illustrates this, showing models can still fail at basic physical movement, often struggling to distinguish between clockwise/counter-clockwise rotations or simple lateral movements (e.g., a car moving right being labeled as moving left). This motivates a benchmark focused on temporal grounding, assessing how things change over time, rather than just spatial comprehension.
 
-  \item Claude \cite{sonnet3.5} \cite{sonnet3.7}: Multimodal understanding via image-based video input across a 200K-token context window. Claude 3.5 Sonnet and Claude 3.7 can process video as sequences of sampled frames and support diverse vision-language tasks. However, like GPT, Claude's architecture processes videos as sequences of sampled frames, which may limit temporal grounding capabilities. The extent of Claude's native video processing capabilities and performance on long-form video understanding benchmarks remains to be seen.
-\end{itemize}
+While current state-of-the-art VLMs show promise in general video understanding, they fundamentally struggle with spatio-temporal awareness. As VLM4D \cite{vlm4d} illustrates, models frequently fail to resolve basic physical dynamics, such as distinguishing between clockwise and counter-clockwise rotations. This persistent time-blindness motivates the need for benchmarks like SpookyBench \cite{spookybench}, which isolates temporal grounding by stripping away all spatial shortcuts. By forcing models to derive meaning solely from changes over time, we can evaluate a model's inherent temporal reasoning independent of its spatial comprehension. While humans achieve over 98\% accuracy on SpookyBench, fifteen state-of-the-art VLMs failed to identify any content, scoring 0\%. This categorical failure further highlights the critical time-blindness in current architectures that struggle to decode information presented through purely temporal noise sequences, directly motivating ChronoQA's focus.
 
-\subsubsection{Open-Source VLMs}
-
-\begin{itemize}
-  \item LLaVA-NeXT \cite{llava-next}: Extends the LLaVA architecture to video modalities via frame sampling, using a CLIP-based vision encoder projected into a language model backbone. This model performs well on short video segments under high frame sampling rates.
-
-  \item Qwen2-VL \cite{qwen2-vl} and Qwen3-VL \cite{qwen3-vl}: Supports dynamic resolution and native video processing with strong performance on short video benchmarks. ChronoQA uses Qwen3-VL-30B as its caption generation backbone, leveraging its efficient visual token budget mechanism for per-segment captioning.
-
-  \item Molmo \cite{molmo}: A family of open vision-language models developed by the Allen Institute for AI. The more recent Molmo 2 \cite{molmo2} extends this to video and multi-image understanding, introducing spatio-temporal grounding capabilities and video tracking.
-\end{itemize}
-
-Throughout these models, we notice a common architectural pattern. The model consists of a vision encoder (SigLIP \cite{siglip}, InternViT \cite{internvl}, etc.), which projects visual tokens into the language token space, before being paired with an LLM backbone. This pattern processes videos as sequences of sampled frames, abandoning the fine-grained temporal information between frames.
-
-SpookyBench \cite{spookybench} tests 15 state-of-the-art video VLMs on tasks requiring encoding information purely in temporal sequences, finding 0\% accuracy across all models, while humans scored over 98\%.
-
-Current state-of-the-art VLMs struggle with spatiotemporal awareness. VLM4D \cite{vlm4d} illustrates this, showing models can still fail at basic physical movement, often struggling to distinguish between clockwise/counter-clockwise rotations or simple lateral movements (e.g., a car moving right being labeled as moving left). This motivates a benchmark focused on temporal grounding, assessing how things change over time, rather than just spatial comprehension.
-
-% THIS IS STILL A MAYBE, IDK IF I LIKE IT
-% Most benchmarks reward a model for recognizing a "dog" and a "ball" (spatial), but they don't
-% sufficiently penalize the model if it can't tell if the ball is spinning or which way the dog
-% is running (temporal). This evidence "motivates" the need for ChronoQA, ensuring the model
-% _must_ understand the sequence of frames to get the answer right, rather than just guessing
-% based on a single static image.
-
-\subsection{Existing VLM Benchmarks}
-
-\subsubsection{Image-Based Benchmarks}
+\subsection{Video Understanding Benchmarks}
 
 \begin{itemize}
   \item \textbf{MMBench} \cite{mmbench}: Evaluates approximately 3,217 questions across 20 ability dimensions using a hierarchical taxonomy of perceptual and reasoning skills. Introduces CircularEval to combat positional bias by cycling correct answers across all option positions, and LLM-based choice extraction for models with weak instruction following. ChronoQA adopts both strategies.
