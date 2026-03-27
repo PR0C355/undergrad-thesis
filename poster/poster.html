@@ -302,8 +302,8 @@
         <p>Each ChronoQA training instance provides three simultaneous levels of supervision, enabling joint training on answer correctness and temporal localization quality.</p>
         <div class="mini-stats">
           <div class="mini-stat"><span class="mv">Answer</span><span class="ml">Correct label A – E via cross-entropy</span></div>
-          <div class="mini-stat"><span class="mv">[t_s, t_e]</span><span class="ml">Verified timestamp interval per answer</span></div>
-          <div class="mini-stat"><span class="mv">4 Distractors</span><span class="ml">Semantically plausible, yet wrong options</span></div>
+          <div class="mini-stat"><span class="mv">[t<sub>s</sub>, t<sub>e</sub>]</span><span class="ml">Verified timestamp interval per answer</span></div>
+          <div class="mini-stat"><span class="mv">4 Distr-<br>actors</span><span class="ml">Semantically plausible, yet wrong options</span></div>
         </div>
         <div class="callout-green">
           <strong>No Temporal Leakage:</strong> Questions never reference "when," "at the beginning," or any timestamp/temporal cues. Blind-filtered so text-only models cannot exceed ~20% (random baseline) without visual context, ensuring every example genuinely requires visual temporal engagement to answer correctly.
