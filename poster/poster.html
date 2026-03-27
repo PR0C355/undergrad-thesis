@@ -8,17 +8,17 @@
   onload="renderMathInElement(document.body, {delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError: false})"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Georgia', serif;
-    background: #e8e4dc;
-    padding: 20px;
-  }
+  body { font-family: 'Georgia', serif; }
   .poster {
-    width: 1400px;
-    margin: 0 auto;
+    width: 100%;
     background: #f7f4ef;
     border: 3px solid #2c3e6e;
-    box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  }
+
+  /* Screen only: constrain width, add background and shadow */
+  @media screen {
+    body { background: #e8e4dc; padding: 20px; }
+    .poster { width: 1400px; margin: 0 auto; box-shadow: 0 6px 32px rgba(0,0,0,0.18); }
   }
 
   /* ── HEADER ── */
@@ -214,6 +214,35 @@
 
   /* ── DIVIDER ── */
   .h-rule { border: none; border-top: 1.5px solid #d0cac0; }
+  @media print {
+    @page { size: 24in 36in; margin: 0; }
+
+    /* Preserve all background colors — without this Chrome prints everything white */
+    * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+    html, body {
+      width: 24in;
+      height: 36in;
+      padding: 0;
+      margin: 0;
+      background: none;
+    }
+
+    /* Pin poster to exactly 24×36in.
+       Grid rows: header | accent-bar | body(fills) | bottom-band | footer */
+    .poster {
+      width: 24in;
+      height: 36in;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto auto;
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Body stretches to fill remaining height within the grid */
+    .body { min-height: 0; overflow: hidden; }
+  }
 </style>
 </head>
 <body>
@@ -567,7 +596,7 @@
       </div>
       <div class="principle">
         <div class="p-icon amber">→</div>
-        <div><strong>Scene-grounded Alternatives:</strong> WDistractors are drawn from the same scene. Similar objects, nearby people, or adjacent details that are present but not the correct answer. They must feel like they <em>could</em> have been the answer given the same scene.</div>
+        <div><strong>Scene-grounded Alternatives:</strong> Distractors are drawn from the same scene. Similar objects, nearby people, or adjacent details that are present but not the correct answer. They must feel like they <em>could</em> have been the answer given the same scene.</div>
       </div>
       <div class="principle">
         <div class="p-icon amber">→</div>
