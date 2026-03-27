@@ -174,6 +174,15 @@
   /* ── TOKEN BUDGET SVG wrapper ── */
   .svg-wrap { margin: 10px 0; }
 
+  /* ── ARCH DIAGRAM ── */
+  .arch-flow { display: flex; align-items: center; gap: 4px; margin: 10px 0 4px; }
+  .arch-box { background: #f0f2f7; border: 1px solid #b8c0d8; border-radius: 4px; padding: 6px 7px; text-align: center; flex: 1; }
+  .arch-box.bottleneck { background: #fff7e6; border-color: #d4900a; }
+  .arch-label { font-size: 0.67rem; font-weight: 700; color: #2c3e6e; font-family: sans-serif; line-height: 1.3; }
+  .arch-sub { font-size: 0.60rem; color: #666; margin-top: 2px; line-height: 1.3; }
+  .arch-arrow { color: #7a8ab0; font-size: 1rem; flex-shrink: 0; }
+  .bottleneck-note { font-size: 0.69rem; color: #7a4a00; background: #fff7e6; border: 1px solid #e8b84a; border-radius: 4px; padding: 5px 9px; margin-bottom: 10px; text-align: center; line-height: 1.4; }
+
   /* ── BOTTOM BAND ── */
   .bottom-band {
     border-top: 1.5px solid #d0cac0;
@@ -215,9 +224,9 @@
     <div class="header-left">
       <div class="badge-row">
         <!-- <span class="hbadge">ACM 2026</span> -->
-        <span class="hbadge">Video Understanding</span>
+        <!-- <span class="hbadge">Video Understanding</span>
         <span class="hbadge">Training Data</span>
-        <span class="hbadge">Temporal Grounding</span>
+        <span class="hbadge">Temporal Grounding</span> -->
       </div>
       <div class="authors" style="margin-top:8px;">Oluwatumininu Oguntola &nbsp;·&nbsp; Gedas Bertasius</div>
       <div class="affil">University of North Carolina at Chapel Hill</div>
@@ -515,9 +524,39 @@
 
     <div class="bb-col">
       <div class="section-title">VLM Architecture & Temporal Bottleneck</div>
-      <p>Current VLMs share a common architectural pattern: a vision encoder (SigLIP-2, InternViT) converts sampled frames into patch tokens, projected into the token space of an LLM backbone. This frame-sampling design is the primary bottleneck for temporal grounding. Inter-frame temporal signals are discarded, and fine-grained motion depends entirely on sampling density.</p>
-      <p>Proprietary models attempt to address this with larger context windows: Gemini 2.5 Pro supports ~6 hours of video at 1 fps within a 2M-token context. Yet even with expanded windows, performance degrades as video duration increases — indicating that context length alone is insufficient. Open-source models like Qwen3-VL and Molmo2 introduce spatiotemporal grounding but operate at smaller effective temporal resolutions.</p>
-      <div class="highlight">ChronoQA's dual supervision directly targets this bottleneck — providing the explicit temporal evidence signal that existing pretraining corpora lack, enabling models to learn grounding rather than shortcut around it.</div>
+      <div class="arch-flow">
+        <div class="arch-box">
+          <div class="arch-label">Video Frames</div>
+          <div class="arch-sub">Sampled at $N$ fps</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div class="arch-label">Vision Encoder</div>
+          <div class="arch-sub">SigLIP-2 / InternViT</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box bottleneck">
+          <div class="arch-label">Patch Tokens</div>
+          <div class="arch-sub">Projected to LLM space</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div class="arch-label">LLM Backbone</div>
+          <div class="arch-sub">Generates Response</div>
+        </div>
+      </div>
+      <div class="bottleneck-note">⚠ Inter-frame temporal signals are discarded at projection. Thus, motion fidelity is entirely sampling-density dependent.</div>
+      <div class="uc-grid">
+        <div class="uc-card">
+          <div class="uc-name">Proprietary</div>
+          <div class="uc-desc">Gemini 2.5 Pro: 2M token context length allows for ~6h @ 1 fps. Performance still degrades with duration, meaning context length alone is insufficient.</div>
+        </div>
+        <div class="uc-card">
+          <div class="uc-name">Open-source</div>
+          <div class="uc-desc">Qwen3-VL, Molmo2: Introduce spatiotemporal grounding but operate at lower effective temporal resolution.</div>
+        </div>
+      </div>
+      <div class="highlight">ChronoQA's dual supervision directly targets this existing bottleneck , providing the explicit temporal evidence signal that existing pretraining corpora lack, enabling models to learn to ground rather than takes shortcuts around it.</div>
     </div>
 
     <div class="bb-col">
