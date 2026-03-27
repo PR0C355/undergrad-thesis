@@ -207,18 +207,17 @@
   <div class="header">
     <div class="header-left">
       <div class="badge-row">
-        <span class="hbadge">ACM 2026</span>
+        <!-- <span class="hbadge">ACM 2026</span> -->
         <span class="hbadge">Video Understanding</span>
         <span class="hbadge">Training Data</span>
         <span class="hbadge">Temporal Grounding</span>
       </div>
-      <div class="authors" style="margin-top:8px;">Oluwatumininu Oguntola &nbsp;·&nbsp; Pranav Wagh &nbsp;·&nbsp; Gedas Bertasius</div>
+      <div class="authors" style="margin-top:8px;">Oluwatumininu Oguntola &nbsp;·&nbsp; Gedas Bertasius</div>
       <div class="affil">University of North Carolina at Chapel Hill</div>
     </div>
     <div class="header-center">
-      <div class="subtitle" style="font-size:0.95rem;margin-bottom:6px;">A Large-Scale Training Dataset for</div>
       <h1>ChronoQA</h1>
-      <div class="subtitle" style="margin-top:6px;font-size:1rem;">Timestamp-Anchored Multiple-Choice QA for Training<br>Temporally Grounded Video-Language Models</div>
+      <div class="subtitle" style="margin-top:6px;font-size:1rem;">A Large-Scale Timestamp-Anchored Multiple-Choice QA Training Dataset <br>for Training Temporally Grounded Video-Language Models</div>
     </div>
     <div class="header-right">
       <div class="affil">oguntola@unc.edu</div>
@@ -252,25 +251,25 @@
 
       <div class="section">
         <div class="section-title">Motivation</div>
-        <p>Large multimodal language models (MLLMs) have achieved impressive performance on standard video benchmarks — yet high scores conceal a fundamental weakness: <strong>temporal grounding</strong>, the ability to localize <em>when</em> events occur, not merely <em>what</em> they are.</p>
+        <p>Large multimodal language models (MLLMs) have achieved impressive performance on standard video benchmarks, but their high scores conceal a fundamental weakness: <strong>temporal grounding</strong>, the ability to localize <em>when</em> events occur, not merely <em>what</em> they are.</p>
         <p>This gap exists because current training data provides answer supervision but completely lacks <strong>temporal evidence supervision</strong>. Models learn which answer is correct, but never learn where in the video that answer is supported.</p>
         <div class="callout-danger">
-          <strong>Gemini 3 Pro</strong> scores 88.4% on Video-MME yet achieves only <strong>48.2%</strong> on fine-grained temporal tasks — while humans score <strong>98.2%</strong>. (TimeBlind, 2026)
+          <strong>Gemini 3 Pro</strong> scores 88.4% on Video-MME yet achieves only <strong>48.2%</strong> on fine-grained temporal tasks, while humans score <strong>98.2%</strong>. (TimeBlind, 2026)
         </div>
         <p>Without explicit grounding supervision, models exploit shortcuts instead of learning genuine temporal reasoning:</p>
         <div class="principle">
           <div class="p-icon">1</div>
-          <div><strong>Static shortcuts</strong> — answering from single-frame cues that happen to correlate with correct answers, without engaging the video's temporal structure.</div>
+          <div><strong>Static Shortcuts</strong>: Answering from single-frame cues that happen to correlate with correct answers, without engaging the video's temporal structure.</div>
         </div>
         <div class="principle">
           <div class="p-icon">2</div>
-          <div><strong>Linguistic priors</strong> — pattern-matching question text to answer options without watching the video at all.</div>
+          <div><strong>Linguistic Priors</strong>: Pattern-matching question text to answer options without watching the video at all.</div>
         </div>
         <div class="principle">
           <div class="p-icon">3</div>
-          <div><strong>Positional bias</strong> — exploiting the tendency of existing datasets to cluster evidence near video boundaries, enabling imprecise localization to score well.</div>
+          <div><strong>Positional Bias</strong>: Exploiting the tendency of existing datasets to cluster evidence near video boundaries, enabling imprecise localization to score well.</div>
         </div>
-        <p style="margin-top:6px;">Practical applications — surgical procedure review, broadcast sports analysis, security monitoring, long-form lecture comprehension — all require models to answer <em>and</em> to identify precisely when supporting evidence occurs. ChronoQA addresses this gap at the level of training data itself.</p>
+        <p style="margin-top:6px;">Practical applications like surgical procedure review, broadcast sports analysis, security monitoring, and long-form lecture comprehension, all require models to answer <em>and</em> to identify precisely when supporting evidence occurs. ChronoQA addresses this gap at the training data level.</p>
       </div>
 
       <div class="section">
@@ -278,19 +277,19 @@
         <p>No existing training resource combines long-form video, MCQ format, and timestamp-level grounding targets simultaneously:</p>
         <table class="tbl">
           <thead>
-            <tr><th>Dataset</th><th>Long-form</th><th>TS labels</th><th>MCQ</th><th>Train signal</th></tr>
+            <tr><th>Dataset</th><th>Long-form</th><th>Timestamp Labels</th><th>MCQ</th><th>Training Signal</th></tr>
           </thead>
           <tbody>
-            <tr><td>Video-MME</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">Answer only</td></tr>
-            <tr><td>Charades-STA</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">Regress. / biased</td></tr>
-            <tr><td>ActivityNet-QA</td><td class="partial">~3 min</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">Answer only</td></tr>
-            <tr><td>LongVideoBench</td><td class="check">✓</td><td class="partial">Input</td><td class="check">✓</td><td class="partial">Inverted task</td></tr>
-            <tr><td>MVBench</td><td class="cross">✗</td><td class="partial">Coarse</td><td class="check">✓</td><td class="cross">Answer only</td></tr>
-            <tr><td>EgoSchema</td><td class="partial">3 min</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">Answer only</td></tr>
-            <tr class="hl-row"><td>ChronoQA</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">Answer + interval</td></tr>
+            <tr><td>Video-MME</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">Answer Only</td></tr>
+            <tr><td>Charades-STA</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="partial">Regression / Biased</td></tr>
+            <tr><td>ActivityNet-QA</td><td class="partial">~3 min</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">Answer Only</td></tr>
+            <tr><td>LongVideoBench</td><td class="check">✓</td><td class="partial">Input</td><td class="check">✓</td><td class="partial">Inverted Task</td></tr>
+            <tr><td>MVBench</td><td class="cross">✗</td><td class="partial">Coarse Bins</td><td class="check">✓</td><td class="cross">Answer Only</td></tr>
+            <tr><td>EgoSchema</td><td class="partial">3 min</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">Answer Only</td></tr>
+            <tr class="hl-row"><td>ChronoQA</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">Answer + Interval</td></tr>
           </tbody>
         </table>
-        <p style="font-size:0.72rem;color:#666;font-style:italic;">LongVideoBench provides timestamps as input context — inverting the task. ChronoQA requires models to independently locate the supporting evidence interval as a supervision target.</p>
+        <p style="font-size:0.72rem;color:#666;font-style:italic;">LongVideoBench provides timestamps as input context, an inversion of the task. ChronoQA requires models to independently locate the supporting evidence interval as a supervision target.</p>
       </div>
 
     </div><!-- col 1 -->
@@ -300,14 +299,14 @@
 
       <div class="section">
         <div class="section-title">Dataset Design</div>
-        <p>Each ChronoQA training instance provides three levels of supervision simultaneously — enabling joint training on answer correctness and temporal localization quality:</p>
+        <p>Each ChronoQA training instance provides three simultaneous levels of supervision, enabling joint training on answer correctness and temporal localization quality.</p>
         <div class="mini-stats">
-          <div class="mini-stat"><span class="mv">Answer</span><span class="ml">Correct label A–E via cross-entropy</span></div>
+          <div class="mini-stat"><span class="mv">Answer</span><span class="ml">Correct label A – E via cross-entropy</span></div>
           <div class="mini-stat"><span class="mv">[t_s, t_e]</span><span class="ml">Verified timestamp interval per answer</span></div>
-          <div class="mini-stat"><span class="mv">4 distractors</span><span class="ml">Semantically plausible wrong options</span></div>
+          <div class="mini-stat"><span class="mv">4 Distractors</span><span class="ml">Semantically plausible, yet wrong options</span></div>
         </div>
         <div class="callout-green">
-          <strong>No temporal leakage:</strong> Questions never reference "when," "at the beginning," or any timestamp cue. Blind-filtered so text-only models cannot exceed ~20% (random baseline), ensuring every example genuinely requires visual temporal engagement to answer correctly.
+          <strong>No Temporal Leakage:</strong> Questions never reference "when," "at the beginning," or any timestamp/temporal cues. Blind-filtered so text-only models cannot exceed ~20% (random baseline) without visual context, ensuring every example genuinely requires visual temporal engagement to answer correctly.
         </div>
       </div>
 
@@ -316,51 +315,51 @@
         <div class="example-box">
           <div class="ex-label">Question (action understanding)</div>
           <div class="ex-q">"While the chef is working at the wooden cutting board, what is he doing with the herbs immediately before adding them to the pan?"</div>
-          <div class="ex-label" style="margin-top:8px;">Answer options (each with timestamp)</div>
-          <div class="ex-option"><div class="ex-letter">A</div><div><div class="ex-text">Roughly tearing the herbs by hand into uneven pieces</div><div class="ex-ts">0:42 – 0:55</div></div></div>
-          <div class="ex-option"><div class="ex-letter">B</div><div><div class="ex-text">Blanching the herbs briefly in boiling water to wilt them</div><div class="ex-ts">3:12 – 3:24</div></div></div>
+          <div class="ex-label" style="margin-top:8px;">Answer Options</div>
+          <div class="ex-option"><div class="ex-letter">A</div><div><div class="ex-text">Roughly tearing the herbs by hand into uneven pieces</div></div></div>
+          <div class="ex-option"><div class="ex-letter">B</div><div><div class="ex-text">Blanching the herbs briefly in boiling water to wilt them</div></div></div>
           <div class="ex-option"><div class="ex-letter correct">C</div><div><div class="ex-text">Finely chopping the herbs using a rocking motion with a chef's knife</div><div class="ex-ts">7:08 – 7:21</div></div></div>
-          <div class="ex-option"><div class="ex-letter">D</div><div><div class="ex-text">Bruising the herb stems against the board with the flat of the blade</div><div class="ex-ts">11:34 – 11:47</div></div></div>
-          <div class="ex-option"><div class="ex-letter">E</div><div><div class="ex-text">Patting the herbs dry with a cloth before loosely stacking them</div><div class="ex-ts">5:50 – 6:03</div></div></div>
-          <div style="margin-top:8px;font-size:0.71rem;color:#2c3e6e;font-family:sans-serif;"><strong>Training targets:</strong> Label = C &nbsp;|&nbsp; Grounding interval = [7:08, 7:21]</div>
+          <div class="ex-option"><div class="ex-letter">D</div><div><div class="ex-text">Bruising the herb stems against the board with the flat of the blade</div></div></div>
+          <div class="ex-option"><div class="ex-letter">E</div><div><div class="ex-text">Patting the herbs dry with a cloth before loosely stacking them</div></div></div>
+          <div style="margin-top:8px;font-size:0.71rem;color:#2c3e6e;font-family:sans-serif;"><strong>Training targets:</strong><br> Label = C &nbsp;|&nbsp; Grounding interval = [7:08, 7:21]</div>
         </div>
-        <p style="font-size:0.73rem;color:#555;font-style:italic;">Distractors describe real events from elsewhere in the same video — models must locate the correct segment, not just recognize a plausible description.</p>
+        <p style="font-size:0.73rem;color:#555;font-style:italic;">Distractors describe real events from <strong>elsewhere in the same video</strong>. Models must locate the <em>correct</em> segment, not just recognize what seems like a plausible description.</p>
       </div>
 
       <div class="section">
         <div class="section-title">Five Training Categories</div>
-        <p style="font-size:0.75rem;color:#666;font-style:italic;margin-bottom:8px;">Ordered by temporal scope required — segment-level to full-video</p>
+        <p style="font-size:0.75rem;color:#666;font-style:italic;margin-bottom:8px;">In Order of by Temporal Scope Required:<br> Segment-level to Full-video</p>
         <div class="cat-grid">
           <div class="cat-card">
             <div class="cat-num">1</div>
             <div class="cat-body">
               <div class="cat-name">Action Understanding</div>
-              <div class="cat-desc">Fine-grained characterization of a video segment's content — tool usage, body posture, object manipulation, procedural steps within a single continuous action.</div>
-              <div class="cat-scope">Scope: single segment · Tests: visual perception</div>
+              <div class="cat-desc">Fine-grained characterization of a video segment's content. Includes tool usage, body posture, object manipulation, and procedural steps within a single continuous action.</div>
+              <div class="cat-scope">Scope: Single segment<br>Tests: Visual Perception</div>
             </div>
           </div>
           <div class="cat-card">
             <div class="cat-num">2</div>
             <div class="cat-body">
               <div class="cat-name">Needle-in-Haystack</div>
-              <div class="cat-desc">Retrieve a specific visual or textual detail — brand names, colors, on-screen text, counts, spatial attributes — from anywhere in the full video. Correct-answer timestamps uniformly distributed to prevent positional bias.</div>
-              <div class="cat-scope">Scope: any point in video · Tests: sustained attention</div>
+              <div class="cat-desc">Retrieval of specific visual or textual details. Includes brand names, colors, on-screen text, counts, spatial attributes, from anywhere in the full video. Correct-answer timestamps uniformly distributed to prevent positional bias.</div>
+              <div class="cat-scope">Scope: Any Point in the Video<br>Tests: sustained attention</div>
             </div>
           </div>
           <div class="cat-card">
             <div class="cat-num">3</div>
             <div class="cat-body">
               <div class="cat-name">Temporal Ordering</div>
-              <div class="cat-desc">Reason about before/after relationships, event sequences, and transitions — events may be separated by minutes, requiring a coherent temporal map of the full video.</div>
-              <div class="cat-scope">Scope: multi-segment · Tests: sequence reasoning</div>
+              <div class="cat-desc">Reasoning about before/after relationships, event sequences, and transitions. Events may be separated by minutes, requiring a coherent temporal map of the full video.</div>
+              <div class="cat-scope">Scope: Multi-segment<br>Tests: Sequence Reasoning</div>
             </div>
           </div>
           <div class="cat-card">
             <div class="cat-num">4</div>
             <div class="cat-body">
               <div class="cat-name">Causal Understanding</div>
-              <div class="cat-desc">Integrate evidence from two or more non-adjacent segments to infer causation, motivation, and cross-segment patterns. No single segment contains sufficient information to answer correctly.</div>
-              <div class="cat-scope">Scope: multiple disjoint segments · Tests: cross-segment synthesis</div>
+              <div class="cat-desc">Integrates evidence from two or more non-adjacent segments to infer causation, motivation, and cross-segment patterns. No single segment contains sufficient information to answer correctly.</div>
+              <div class="cat-scope">Scope: Multiple Disjoint Segments<br>TTests: Cross-segment Synthesis</div>
             </div>
           </div>
           <div class="cat-card">
@@ -368,7 +367,7 @@
             <div class="cat-body">
               <div class="cat-name">General Understanding</div>
               <div class="cat-desc">Holistic comprehension of the video's overarching narrative, primary subject, core message, or tone. Correct answers are only derivable after processing the video in its entirety.</div>
-              <div class="cat-scope">Scope: full video · Tests: global narrative reasoning</div>
+              <div class="cat-scope">Scope: Full Video<br>Tests: Global Narrative Reasoning</div>
             </div>
           </div>
         </div>
@@ -381,7 +380,7 @@
 
       <div class="section">
         <div class="section-title">Automated Generation Pipeline</div>
-        <p>ChronoQA is produced by a fully automated pipeline — no manual annotation required — enabling scaling to hundreds of thousands of training examples.</p>
+        <p>ChronoQA is produced by a fully automated pipeline, requiring no manual annotation, enabling scaling to hundreds of thousands of training examples.</p>
         <div class="pipeline">
           <div class="pipeline-row"><div class="pipeline-box">1 · YouTube Crawl</div><div class="pipeline-desc">Filter by duration (5–60 min), content type (instructional, narrative, procedural, sports, vlogs), and Creative Commons licensing.</div></div>
           <div class="pipe-arrow">↓</div>
