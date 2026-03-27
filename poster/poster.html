@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #f0ede6;
+    color: #1a1a1a;
+    padding: 0;
+    min-height: 100vh;
+  }
+  .poster {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #f7f4ef;
+    border: 2px solid #2c3e6e;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  }
+  .header {
+    background: #2c3e6e;
+    color: #fff;
+    padding: 28px 36px 22px;
+    text-align: center;
+  }
+  .header h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; line-height: 1.2; }
+  .header .subtitle { font-size: 1.05rem; font-style: italic; color: #b8c8e8; margin-bottom: 14px; font-weight: 400; }
+  .authors { font-size: 0.97rem; color: #d8e4f5; margin-bottom: 4px; }
+  .affil { font-size: 0.85rem; color: #aabbd8; }
+  .body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  .col { padding: 20px 18px; border-right: 1.5px solid #d0cac0; }
+  .col:last-child { border-right: none; }
+  .section { margin-bottom: 18px; }
+  .section-title {
+    font-family: 'Georgia', serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #2c3e6e;
+    border-bottom: 2px solid #2c3e6e;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+  }
+  .section p { font-size: 0.82rem; line-height: 1.6; color: #2a2a2a; margin-bottom: 7px; font-family: 'Georgia', serif; }
+  .highlight {
+    background: #e8edf8;
+    border-left: 3px solid #2c3e6e;
+    padding: 8px 11px;
+    margin: 8px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.8rem;
+    color: #1a2a50;
+    font-family: 'Georgia', serif;
+    line-height: 1.5;
+  }
+  .pipeline { display: flex; flex-direction: column; gap: 5px; margin: 8px 0; }
+  .pipeline-step { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; font-family: 'Georgia', serif; }
+  .pipeline-box {
+    background: #2c3e6e; color: #fff; padding: 4px 10px; border-radius: 3px;
+    font-size: 0.74rem; font-weight: 600; letter-spacing: 0.3px; min-width: 130px; text-align: center;
+  }
+  .pipeline-desc { color: #555; font-size: 0.73rem; font-style: italic; }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  .cat-card { border: 1px solid #c8c0b4; border-radius: 4px; padding: 7px 9px; background: #fff; }
+  .cat-card .cat-name { font-size: 0.73rem; font-weight: 700; color: #2c3e6e; margin-bottom: 3px; font-family: 'Georgia', serif; }
+  .cat-card .cat-desc { font-size: 0.68rem; color: #555; line-height: 1.45; font-family: 'Georgia', serif; }
+  .cat-card.wide { grid-column: 1 / -1; }
+  .bench-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.68rem; font-family: 'Georgia', serif; }
+  .bench-table th { background: #2c3e6e; color: #fff; padding: 4px 6px; text-align: center; font-weight: 600; font-size: 0.66rem; }
+  .bench-table td { padding: 4px 6px; border-bottom: 1px solid #e0dbd4; text-align: center; color: #333; }
+  .bench-table td:first-child { text-align: left; font-weight: 600; }
+  .bench-table tr:nth-child(even) td { background: #f0ede6; }
+  .bench-table .highlight-row td { background: #e8edf8 !important; color: #1a2a50; font-weight: 700; }
+  .check { color: #2a7a2a; font-weight: 700; }
+  .cross { color: #9a2a2a; }
+  .base-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.71rem; font-family: 'Georgia', serif; }
+  .base-table th { background: #4a5a8e; color: #fff; padding: 4px 6px; font-size: 0.67rem; font-weight: 600; text-align: left; }
+  .base-table td { padding: 4px 6px; border-bottom: 1px solid #e0dbd4; font-size: 0.7rem; }
+  .base-table tr:nth-child(even) td { background: #f0ede6; }
+  .principle { display: flex; gap: 8px; margin-bottom: 7px; align-items: flex-start; font-size: 0.77rem; font-family: 'Georgia', serif; line-height: 1.5; }
+  .principle-icon {
+    background: #2c3e6e; color: #fff; border-radius: 50%; width: 18px; height: 18px;
+    font-size: 0.6rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .principle strong { color: #2c3e6e; }
+  .stat-row { display: flex; gap: 8px; margin: 8px 0; }
+  .stat-badge { flex: 1; background: #2c3e6e; color: #fff; border-radius: 4px; padding: 8px 6px; text-align: center; }
+  .stat-badge .val { font-size: 1.15rem; font-weight: 700; display: block; line-height: 1.1; }
+  .stat-badge .lbl { font-size: 0.61rem; color: #b8c8e8; letter-spacing: 0.3px; line-height: 1.3; margin-top: 3px; display: block; }
+  .formula { background: #fff; border: 1px solid #c8c0b4; border-radius: 4px; padding: 7px 10px; margin: 7px 0; font-size: 0.74rem; font-family: 'Courier New', monospace; color: #2c2c2c; line-height: 1.7; }
+  .formula .label { font-family: 'Georgia', serif; font-size: 0.71rem; color: #7a8ab0; font-style: italic; margin-bottom: 3px; display: block; }
+  .h-rule { border: none; border-top: 1.5px solid #d0cac0; margin: 0; }
+  .footer { background: #2c3e6e; color: #b8c8e8; padding: 10px 36px; font-size: 0.72rem; display: flex; justify-content: space-between; align-items: center; }
+  .tag { display: inline-block; background: #4a5a8e; color: #d8e4f5; border-radius: 3px; padding: 1px 6px; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.4px; margin-right: 4px; vertical-align: middle; }
+  .bottom-row { display: grid; grid-template-columns: 2fr 1fr; border-top: 1.5px solid #d0cac0; }
+  .bottom-left { padding: 18px; border-right: 1.5px solid #d0cac0; }
+  .bottom-right { padding: 18px; }
+  .use-case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  .use-case-card { border: 1px solid #c8c0b4; border-radius: 4px; padding: 7px 9px; background: #fff; }
+  .use-case-card .uc-name { font-size: 0.73rem; font-weight: 700; color: #2c3e6e; margin-bottom: 3px; font-family: 'Georgia', serif; }
+  .use-case-card .uc-desc { font-size: 0.68rem; color: #555; line-height: 1.45; font-family: 'Georgia', serif; }
+  .metric-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.74rem; font-family: 'Georgia', serif; }
+  .metric-table th { background: #2c3e6e; color: #fff; padding: 5px 7px; text-align: left; font-weight: 600; font-size: 0.71rem; }
+  .metric-table td { padding: 4px 7px; border-bottom: 1px solid #e0dbd4; vertical-align: top; line-height: 1.4; }
+  .metric-table tr:nth-child(even) td { background: #f0ede6; }
+</style>
+</head>
+<body>
+<div class="poster">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="subtitle">A Large-Scale Training Dataset for Temporal Grounding in Long-Form Video</div>
+    <h1>ChronoQA</h1>
+    <div class="subtitle" style="margin-top:4px;font-size:0.92rem;">Timestamp-Anchored Multiple-Choice QA Pairs for Training Temporally Grounded Video-Language Models</div>
+    <div class="authors" style="margin-top:10px;">Oluwatumininu Oguntola &nbsp;·&nbsp; Pranav Wagh &nbsp;·&nbsp; Gedas Bertasius</div>
+    <div class="affil">University of North Carolina at Chapel Hill &nbsp;|&nbsp; 2026</div>
+  </div>
+
+  <!-- MAIN 3-COL BODY -->
+  <div class="body">
+
+    <!-- COL 1 -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Motivation</div>
+        <p>Current video-language models (VLMs) are trained on data that provides <em>answer supervision</em> but lacks <em>temporal evidence supervision</em>. Without knowing <em>where</em> in a video an answer is grounded, models learn shortcuts instead of genuine temporal reasoning.</p>
+        <div class="highlight">
+          Gemini 3 Pro scores <strong>88.4%</strong> on Video-MME yet only <strong>48.2%</strong> on fine-grained temporal tasks — a gap traced directly to the absence of temporal grounding signal in training data.
+        </div>
+        <p>ChronoQA addresses this at the source: every training example pairs a question and correct answer with a <strong>verified timestamp interval</strong>, giving models an explicit supervision target for <em>when</em> the answer occurs — not just <em>what</em> the answer is.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">What Makes a Good Training Signal?</div>
+        <p>Existing datasets fall short as training resources for temporal grounding:</p>
+        <table class="bench-table">
+          <thead>
+            <tr><th>Dataset</th><th>Long-form</th><th>Timestamp labels</th><th>MCQ</th><th>Train signal</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Video-MME</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">Answer only</td></tr>
+            <tr><td>Charades-STA</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">Regression bias</td></tr>
+            <tr><td>ActivityNet-QA</td><td class="cross">Short</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">Answer only</td></tr>
+            <tr><td>LongVideoBench</td><td class="check">✓</td><td class="cross">Input only</td><td class="check">✓</td><td class="cross">Inverted task</td></tr>
+            <tr class="highlight-row"><td>ChronoQA</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">Answer + interval</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.7rem;color:#666;font-style:italic;">LongVideoBench provides timestamps as input context rather than as a supervision target — it cannot train a model to locate evidence independently.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">The Temporal Grounding Gap</div>
+        <p>Training without timestamp supervision produces models that exploit:</p>
+        <div class="principle">
+          <div class="principle-icon">1</div>
+          <div><strong>Static shortcuts</strong> — single-frame cues that happen to correlate with correct answers</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon">2</div>
+          <div><strong>Linguistic priors</strong> — matching question text to answer text without video engagement</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon">3</div>
+          <div><strong>Positional bias</strong> — dataset artifacts that cluster evidence near video boundaries</div>
+        </div>
+        <p>ChronoQA's training examples are explicitly designed to close each of these loopholes.</p>
+      </div>
+
+    </div><!-- end col 1 -->
+
+    <!-- COL 2 -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Dataset Structure</div>
+        <p>Each ChronoQA instance provides three levels of supervision simultaneously: the correct answer, the supporting timestamp interval, and four semantically plausible distractors — enabling both answer and grounding losses during training.</p>
+        <div class="stat-row">
+          <div class="stat-badge"><span class="val">40K+</span><span class="lbl">source videos</span></div>
+          <div class="stat-badge"><span class="val">5–60</span><span class="lbl">min per video</span></div>
+          <div class="stat-badge"><span class="val">5-way</span><span class="lbl">MCQ + timestamps</span></div>
+        </div>
+        <div class="highlight">
+          <strong>Dual supervision per example:</strong> answer label (A–E) <em>and</em> a verified [t_start, t_end] interval — enabling models to be trained jointly on answer correctness and temporal localization quality.
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Five Training Categories</div>
+        <p style="font-size:0.75rem;color:#555;font-style:italic;margin-bottom:8px;">Ordered by temporal scope — from segment-level to full-video reasoning</p>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <div class="cat-name">Action Understanding</div>
+            <div class="cat-desc">Fine-grained segment content — tool usage, body posture, procedural steps. Single-segment scope.</div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-name">Needle-in-Haystack</div>
+            <div class="cat-desc">Specific visual details (brands, colors, on-screen text) distributed uniformly across the full timeline to prevent positional bias.</div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-name">Temporal Ordering</div>
+            <div class="cat-desc">Event sequencing across minutes-long gaps — before/after relationships, transitions between named states.</div>
+          </div>
+          <div class="cat-card">
+            <div class="cat-name">Causal Understanding</div>
+            <div class="cat-desc">Cross-segment synthesis — no single segment suffices; models must integrate evidence from multiple disjoint parts.</div>
+          </div>
+          <div class="cat-card wide">
+            <div class="cat-name">General Understanding</div>
+            <div class="cat-desc">Full-video holistic comprehension — overarching narrative, primary subject, tone. Correct answers require processing the entire video; no single segment is sufficient.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Training-Oriented Design Principles</div>
+        <div class="principle">
+          <div class="principle-icon">A</div>
+          <div><strong>No temporal leakage in questions</strong> — questions never reference "when," "beginning," or timestamps, so models cannot learn surface-form shortcuts from question text.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon">B</div>
+          <div><strong>Uniform answer position distribution</strong> — correct answers are balanced across A–E, preventing models from learning positional biases.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon">C</div>
+          <div><strong>Semantically grounded distractors</strong> — wrong options are plausible events at incorrect timestamps (or correct timestamps with wrong descriptions), forcing contrastive temporal reasoning.</div>
+        </div>
+        <div class="principle">
+          <div class="principle-icon">D</div>
+          <div><strong>Blind-filtered for visual necessity</strong> — text-only models cannot exceed random chance (~20%), ensuring every example genuinely requires visual temporal engagement.</div>
+        </div>
+      </div>
+
+    </div><!-- end col 2 -->
+
+    <!-- COL 3 -->
+    <div class="col">
+
+      <div class="section">
+        <div class="section-title">Scalable Generation Pipeline</div>
+        <div class="pipeline">
+          <div class="pipeline-step"><div class="pipeline-box">YouTube Crawl</div><span class="pipeline-desc">5–60 min videos; Creative Commons licensing; CLIP-based visual diversity filter</span></div>
+          <div style="text-align:center;color:#7a8ab0;font-size:0.85rem;">↓</div>
+          <div class="pipeline-step"><div class="pipeline-box">Segment & Caption</div><span class="pipeline-desc">10s clips via Qwen3-VL-30B at 1 fps; timestamped free-form captions per segment</span></div>
+          <div style="text-align:center;color:#7a8ab0;font-size:0.85rem;">↓</div>
+          <div class="pipeline-step"><div class="pipeline-box">QA Generation</div><span class="pipeline-desc">Qwen3-Next-80B; structured JSON outputs; 3 Qs per category per video; ~98% success rate</span></div>
+          <div style="text-align:center;color:#7a8ab0;font-size:0.85rem;">↓</div>
+          <div class="pipeline-step"><div class="pipeline-box">Validation & Cleaning</div><span class="pipeline-desc">Temporal pattern removal; timestamp merging; jitter ±1–3s for annotation variance</span></div>
+          <div style="text-align:center;color:#7a8ab0;font-size:0.85rem;">↓</div>
+          <div class="pipeline-step"><div class="pipeline-box">Distractor Generation</div><span class="pipeline-desc">4 semantically plausible distractors grounded in ±30s local context window</span></div>
+          <div style="text-align:center;color:#7a8ab0;font-size:0.85rem;">↓</div>
+          <div class="pipeline-step"><div class="pipeline-box">Blind Filtering</div><span class="pipeline-desc">Multiple text-only LLMs discard linguistically solvable examples; retains visual-only Qs</span></div>
+        </div>
+        <p style="font-size:0.7rem;color:#666;font-style:italic;margin-top:4px;">Fully automated — scalable to hundreds of thousands of examples with no manual annotation.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Training Signal per Instance</div>
+        <div class="formula">
+          <span class="label">Answer supervision</span>
+          Label ∈ {A, B, C, D, E} → cross-entropy loss
+        </div>
+        <div class="formula">
+          <span class="label">Temporal grounding supervision</span>
+          Target: [t_start, t_end] per correct answer<br>
+          tIoU = |P ∩ G| / |P ∪ G| → grounding loss
+        </div>
+        <div class="formula">
+          <span class="label">Joint training objective</span>
+          L = L_answer + λ · L_grounding
+        </div>
+        <p style="font-size:0.72rem;margin-top:5px;">The dual-objective formulation trains models to be correct <em>and</em> to localize evidence — directly targeting the failure mode where high QA accuracy masks poor temporal grounding.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Downstream Use Cases</div>
+        <div class="use-case-grid">
+          <div class="use-case-card">
+            <div class="uc-name">Supervised fine-tuning</div>
+            <div class="uc-desc">Train VLMs on answer + timestamp pairs to instill temporal grounding as a learned capability.</div>
+          </div>
+          <div class="use-case-card">
+            <div class="uc-name">RLHF / preference data</div>
+            <div class="uc-desc">Use grounded vs. ungrounded correct answers as preference pairs for reward modeling.</div>
+          </div>
+          <div class="use-case-card">
+            <div class="uc-name">Pretraining augmentation</div>
+            <div class="uc-desc">Mix into video pretraining corpora to improve temporal awareness from the ground up.</div>
+          </div>
+          <div class="use-case-card">
+            <div class="uc-name">Probing & diagnostics</div>
+            <div class="uc-desc">Held-out split supports evaluation of temporal grounding across five reasoning categories.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end col 3 -->
+
+  </div>
+
+  <hr class="h-rule">
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+    <div class="bottom-left">
+      <div class="section-title" style="font-family:'Georgia',serif;font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2c3e6e;border-bottom:2px solid #2c3e6e;padding-bottom:4px;margin-bottom:10px;">Quality Controls Ensuring Training Data Integrity</div>
+      <table class="metric-table">
+        <thead>
+          <tr><th>Control</th><th>Method</th><th>What it prevents</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Blind filtering</td><td>Multiple text-only LLMs; discard if any model answers correctly</td><td>Linguistically solvable examples entering training data</td></tr>
+          <tr><td>Temporal jitter</td><td>±1–3s random expansion of ground-truth intervals</td><td>Models memorizing exact 10s clip boundaries</td></tr>
+          <tr><td>Uniform timestamp distribution</td><td>Needle-in-Haystack answers placed evenly across video timeline</td><td>Positional bias (start/end clustering)</td></tr>
+          <tr><td>Balanced answer positions</td><td>Correct answer randomly shuffled across A–E</td><td>Models learning answer-position shortcuts</td></tr>
+          <tr><td>Visual diversity filter</td><td>CLIP embedding cosine similarity delta score</td><td>Static, low-temporal-content videos entering the corpus</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="bottom-right">
+      <div class="section-title" style="font-family:'Georgia',serif;font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2c3e6e;border-bottom:2px solid #2c3e6e;padding-bottom:4px;margin-bottom:10px;">Contributions</div>
+      <div class="principle" style="font-size:0.78rem;">
+        <div class="principle-icon">1</div>
+        <div><strong>ChronoQA training corpus</strong> — the first large-scale dataset pairing long-form video QA with verified timestamp supervision across five temporal reasoning categories.</div>
+      </div>
+      <div class="principle" style="font-size:0.78rem;">
+        <div class="principle-icon">2</div>
+        <div><strong>Scalable automated pipeline</strong> — fully automated generation from YouTube crawl to quality-filtered training examples, requiring no manual annotation.</div>
+      </div>
+      <div class="principle" style="font-size:0.78rem;">
+        <div class="principle-icon">3</div>
+        <div><strong>Dual training objective</strong> — answer + grounding supervision per example directly targets the gap between QA accuracy and genuine temporal localization ability.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <span class="tag">ACM 2026</span>
+      <span class="tag">Video Understanding</span>
+      <span class="tag">Temporal Grounding</span>
+      <span class="tag">Training Data</span>
+      <span class="tag">VLM</span>
+    </div>
+    <div>oguntola@unc.edu &nbsp;·&nbsp; pawagh@unc.edu &nbsp;·&nbsp; gedas@cs.unc.edu</div>
+  </div>
+
+</div>
+</body>
+</html>
