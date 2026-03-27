@@ -217,15 +217,17 @@
   @media print {
     @page { size: 24in 36in; margin: 0; }
 
-    /* Preserve all background colors — without this Chrome prints everything white */
+    /* Preserve all background colors */
     * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 
+    /* Scale up from 16px screen default → all rem values scale proportionally */
     html, body {
       width: 24in;
       height: 36in;
       padding: 0;
       margin: 0;
       background: none;
+      font-size: 26px;
     }
 
     /* Pin poster to exactly 24×36in.
@@ -240,8 +242,92 @@
       page-break-inside: avoid;
     }
 
-    /* Body stretches to fill remaining height within the grid */
-    .body { min-height: 0; overflow: hidden; }
+    /* Body stretches to fill remaining height */
+    .body { min-height: 0; overflow: hidden; align-items: stretch; }
+
+    /* Each column is a vertical flex container so the last section grows */
+    .col {
+      padding: 44px 34px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section { margin-bottom: 30px; }
+
+    /* Last section in each column grows to fill remaining space */
+    .section:last-child {
+      flex: 1;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .section:last-child > .cat-grid,
+    .section:last-child > .uc-grid,
+    .section:last-child > .pipeline,
+    .section:last-child > p:last-child { flex: 1; }
+
+    /* Card grids: more breathing room */
+    .cat-grid { gap: 11px; }
+    .uc-grid { gap: 11px; }
+    .cat-card { padding: 14px 15px; }
+    .uc-card { padding: 13px 15px; }
+
+    /* Text spacing */
+    .section p { line-height: 1.9; margin-bottom: 14px; }
+    .section-title { margin-bottom: 18px; padding-bottom: 8px; }
+    .principle { margin-bottom: 16px; line-height: 1.7; }
+
+    /* Pipeline */
+    .pipeline-desc { line-height: 1.75; padding: 10px 13px; }
+    .pipe-arrow { padding: 6px 0; font-size: 1.15rem; }
+
+    /* Formulas */
+    .formula { padding: 14px 18px; margin: 14px 0; line-height: 2.1; }
+
+    /* Callouts */
+    .highlight, .callout-danger, .callout-green {
+      padding: 14px 18px;
+      margin: 14px 0;
+      line-height: 1.75;
+    }
+
+    /* Bottom band columns */
+    .bb-col {
+      padding: 40px 34px;
+      display: flex;
+      flex-direction: column;
+    }
+    .bb-col .section-title { margin-bottom: 18px; }
+    .bb-col .principle { margin-bottom: 18px; }
+    .bb-col p { line-height: 1.9; margin-bottom: 14px; }
+
+    /* Arch diagram */
+    .arch-flow { gap: 8px; margin: 16px 0 8px; }
+    .arch-box { padding: 10px 10px; }
+    .bottleneck-note { padding: 10px 14px; margin-bottom: 16px; line-height: 1.6; }
+
+    /* Footer */
+    .footer { padding: 18px 60px; }
+
+    /* Mini stats */
+    .mini-stats { gap: 10px; margin: 14px 0; }
+    .mini-stat { padding: 14px 10px; }
+    .mini-stat .mv { font-size: 1.25rem; }
+    .mini-stat .ml { font-size: 0.68rem; }
+
+    /* Example box */
+    .example-box { padding: 16px 18px; margin: 14px 0; }
+    .ex-option { margin-bottom: 8px; }
+
+    /* Accent bar */
+    .accent-bar { padding: 20px 60px; }
+    .accent-stat .val { font-size: 2rem; }
+    .accent-stat .lbl { font-size: 0.78rem; }
+
+    /* Header */
+    .header { padding: 44px 60px 36px; }
+    .header h1 { font-size: 3.4rem; }
+    .header .subtitle { font-size: 1.2rem; }
   }
 </style>
 </head>
