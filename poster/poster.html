@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError: false})"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -305,7 +309,7 @@
         <p>Each ChronoQA training instance provides three simultaneous levels of supervision, enabling joint training on answer correctness and temporal localization quality.</p>
         <div class="mini-stats">
           <div class="mini-stat"><span class="mv">Answer</span><span class="ml">Correct label A – E via cross-entropy</span></div>
-          <div class="mini-stat"><span class="mv">[t<sub>s</sub>, t<sub>e</sub>]</span><span class="ml">Verified timestamp interval per answer</span></div>
+          <div class="mini-stat"><span class="mv">$[t_s, t_e]$</span><span class="ml">Verified timestamp interval per answer</span></div>
           <div class="mini-stat"><span class="mv">4 Distr-<br>actors</span><span class="ml">Semantically plausible, yet wrong options</span></div>
         </div>
         <div class="callout-green">
@@ -385,33 +389,33 @@
         <div class="section-title">Automated Generation Pipeline</div>
         <p>ChronoQA is produced by a fully automated pipeline, requiring no manual annotation, enabling scaling to hundreds of thousands of training examples.</p>
         <div class="pipeline">
-          <div class="pipeline-row"><div class="pipeline-box">1 · YouTube Crawl</div><div class="pipeline-desc">Filter by duration (5–60 min), content type (instructional, narrative, procedural, sports, vlogs), and Creative Commons licensing.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box">1. YouTube Crawl</div><div class="pipeline-desc">Filter by duration (5–60 min), content type (instructional, narrative, procedural, sports, vlogs), and Creative Commons licensing.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box">2 · Visual Diversity Filter</div><div class="pipeline-desc">Compute per-video delta score from CLIP embeddings + cosine similarity across sampled frames. Discard low-motion, static-content videos.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box">2. Visual Diversity Filter</div><div class="pipeline-desc">Compute per-video delta score from CLIP embeddings & cosine similarity across sampled frames. Discard low-motion, static-content videos.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box">3 · Segmentation</div><div class="pipeline-desc">Split each video into fixed 10s clips. Experiments with 10s, 20s, and 30s segments show 10s strikes the optimal balance of temporal resolution vs. computational cost.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box">3. Segmentation</div><div class="pipeline-desc">Split each video into fixed 10s clips. Experiments with 5s, 10s, 20s, and 30s segments show 10s strikes the optimal balance of temporal resolution vs. computational cost.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box">4 · Caption Generation</div><div class="pipeline-desc">Qwen3-VL-30B via vLLM at 1 fps with token budget T_video = C·32·32. Each segment yields a timestamped free-form caption. Token budget controls visual detail per frame-pair.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box">4. Caption Generation</div><div class="pipeline-desc">Qwen3-VL-30B via vLLM at $1 FPS with token budget. Each segment yields a timestamped free-form caption. Token budget determines representation space for visual detail per frame-pair.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box">5 · QA Generation</div><div class="pipeline-desc">Qwen3-Next-80B-A3B-Thinking with Pydantic-enforced structured JSON. Five category-specific prompt templates; 3 questions per category per video. ~98% generation success rate.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box">5. QA Generation</div><div class="pipeline-desc">Qwen3-Next-80B-A3B-Thinking with Pydantic-enforced structured JSON. Five category-specific prompt templates, with 3 questions per category per video. ~98% generation success rate.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box alt">6 · Validation & Cleaning</div><div class="pipeline-desc">Pattern matching removes time-referencing questions. Adjacent timestamps &lt;2s apart are merged. Timestamp jitter of random(1,3)s applied to start and end to increase annotation variance.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box alt">6. Validation & Cleaning</div><div class="pipeline-desc">Pattern matching removes time-referencing questions. Adjacent timestamps &lt;2s apart are merged. Timestamp jitter of random(1,3)s applied to start and end to increase annotation variance.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box alt">7 · Distractor Generation</div><div class="pipeline-desc">Separate LLM pass generates 4 plausible distractors per question, grounded in ±30s local caption context. Distractors match the correct answer in length, casing, and semantic category.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box alt">7. Distractor Generation</div><div class="pipeline-desc">Separate LLM pass generates 4 plausible distractors per question, grounded in ±30s local caption context. Distractors match the correct answer in length, casing, and semantic category.</div></div>
           <div class="pipe-arrow">↓</div>
-          <div class="pipeline-row"><div class="pipeline-box alt">8 · Blind Filtering</div><div class="pipeline-desc">Multiple text-only LLMs (including Qwen3-Next-80B) presented with question + options only. Questions answerable by any model are discarded. Ensures visual necessity of every retained example.</div></div>
+          <div class="pipeline-row"><div class="pipeline-box alt">8. Blind Filtering</div><div class="pipeline-desc">Multiple text-only LLMs (including Qwen3-Next-80B) are presented with question + options only. Questions answerable by multiple models are discarded. This ensures visual necessity of every retained example.</div></div>
         </div>
       </div>
 
       <div class="section">
         <div class="section-title">Caption Token Budget</div>
-        <p>Visual token count per video segment is controlled via the <code style="font-size:0.75rem;background:#f0ede6;padding:1px 4px;border-radius:3px;">T_video</code> parameter, which caps total pixel input across all sampled frames:</p>
+        <p>Visual token count per video segment is controlled via the $T_{\text{video}}$ parameter, which caps total pixel input across all sampled frames:</p>
         <div class="formula">
           <span class="flabel">Pixel cap and per frame-pair budget</span>
-          P_video = T_video × 32² = T_video × 1,024
-          T_fp = T_video / t  (tokens per frame-pair)
+          $$P_{\text{video}} = T_{\text{video}} \times 32^2 = T_{\text{video}} \times 1{,}024$$
+          $$T_{\text{fp}} = T_{\text{video}} / t \quad \text{(tokens per frame-pair)}$$
         </div>
-        <p style="font-size:0.78rem;">At 2 fps with temporal compression factor of 2, a <em>t</em>-second segment produces <em>t</em> frame-pairs. Higher T_video yields finer detail but increases KV-cache pressure and reduces inference concurrency via PagedAttention. Token budgets of 32, 64, and 128 tokens per frame-pair were evaluated; 64 was selected as the production setting.</p>
+        <p style="font-size:0.78rem;">At $1 FPS$ with temporal compression factor of $2$, a $t$-second segment produces $\frac{t}{2}$ frame-pairs. Higher $T_{\text{video}}$ yields finer detail but increases KV-cache pressure and reduces inference concurrency via PagedAttention. Token budgets of 32, 64, and 128 tokens per frame-pair were evaluated. 64 was selected as the production setting.</p>
       </div>
 
     </div><!-- col 3 -->
@@ -421,52 +425,52 @@
 
       <div class="section">
         <div class="section-title">Training Objective</div>
-        <p>Each ChronoQA example supports a dual training objective — jointly optimizing answer correctness and temporal localization quality:</p>
+        <p>Each ChronoQA example supports a dual training objective, jointly optimizing answer correctness and temporal localization quality:</p>
         <div class="formula">
-          <span class="flabel">Answer supervision — cross-entropy</span>
-          L_ans = CrossEntropy(â, a*)
-          where a* ∈ {A, B, C, D, E}
+          <span class="flabel">Answer Supervision: Cross-entropy</span>
+          $$\mathcal{L}_{\text{ans}} = \text{CrossEntropy}(\hat{a},\, a^*)$$
+          $$\text{where } a^* \in \{A, B, C, D, E\}$$
         </div>
         <div class="formula">
-          <span class="flabel">Temporal grounding — IoU-based loss</span>
-          tIoU = |P ∩ G| / |P ∪ G| × 100%
-          L_grd = 1 − tIoU(predicted, [t_s, t_e])
+          <span class="flabel">Temporal Grounding: IoU-based loss</span>
+          $$\text{tIoU} = \frac{|P \cap G|}{|P \cup G|} \times 100\%$$
+          $$\mathcal{L}_{\text{grd}} = 1 - \text{tIoU}(\text{predicted},\, [t_s,\, t_e])$$
         </div>
         <div class="formula">
           <span class="flabel">Joint objective</span>
-          L = L_ans + λ · L_grd
+          $$\mathcal{L} = \mathcal{L}_{\text{ans}} + \lambda \cdot \mathcal{L}_{\text{grd}}$$
         </div>
         <div class="highlight">
-          A model trained on answer labels alone can reach high accuracy by exploiting shortcuts. The grounding loss forces the model to internalize <em>where</em> the answer is supported — producing representations that generalize to genuinely novel temporal queries.
+          A model trained on answer labels alone can reach high accuracy by exploiting shortcuts. The grounding loss forces the model to internalize <em>where</em> the answer is supported, producing representations that generalize to genuinely novel temporal queries.
         </div>
-        <p>Grounded Accuracy (G-Acc) measures joint success: correct answer <em>and</em> tIoU ≥ 0.5 on the predicted interval — providing a unified metric for downstream evaluation of trained models.</p>
+        <p>Grounded Accuracy (G-Acc) measures joint success: A correct answer <em>and</em> $\text{tIoU} \geq 0.5$ on the predicted interval, providing a unified metric for downstream evaluation of trained models.</p>
       </div>
 
       <div class="section">
-        <div class="section-title">Quality Controls</div>
+        <div class="section-title">Quality Control</div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Blind filtering</strong> — multiple text-only LLMs cannot exceed random chance; visual engagement is structurally required, not assumed.</div>
+          <div><strong>Blind Filtering</strong>: Performance of multiple text-only LLMs cannot exceed random chance. Visual engagement is structurally required, not assumed.</div>
         </div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Timestamp jitter</strong> — ±1–3s random expansion of ground-truth intervals prevents models from memorizing exact 10s clip boundaries.</div>
+          <div><strong>Timestamp Jitter</strong>: ±1–3s random expansion of ground-truth intervals prevents models from memorizing exact 10s clip boundaries.</div>
         </div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Uniform timestamp distribution</strong> — Needle-in-Haystack correct-answer timestamps are placed evenly across the full video timeline, eliminating start/end positional bias.</div>
+          <div><strong>Uniform Timestamp Distribution</strong>: Needle-in-Haystack correct-answer timestamps are placed evenly across the full video timeline, eliminating start/end positional bias found in previous works.</div>
         </div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Balanced answer positions</strong> — correct answers are uniformly distributed across A–E, preventing learned position shortcuts.</div>
+          <div><strong>Balanced Answer Positions</strong>: Correct answers are uniformly distributed across $A-E$, preventing learned position shortcuts.</div>
         </div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Visual diversity filter</strong> — CLIP-based delta score removes static, low-motion videos so every example demands temporal attention.</div>
+          <div><strong>Visual Diversity Filtering</strong>:A CLIP-based delta score removes static, low-motion videos to ensure that every example demands temporal attention.</div>
         </div>
         <div class="principle">
           <div class="p-icon green">✓</div>
-          <div><strong>Semantically grounded distractors</strong> — wrong options are real events from elsewhere in the same video, forcing contrastive temporal discrimination rather than pattern matching.</div>
+          <div><strong>Semantically Grounded Distractors</strong>: Wrong options are real events that have occurred in the same video, forcing contrastive temporal discrimination rather than pattern matching.</div>
         </div>
       </div>
 
@@ -479,11 +483,11 @@
           </div>
           <div class="uc-card">
             <div class="uc-name">RLHF / Preference Data</div>
-            <div class="uc-desc">Use grounded vs. ungrounded correct answers as preference pairs for reward modeling. Grounded answers preferred over correct-but-unlocalized ones.</div>
+            <div class="uc-desc">Use grounded vs. ungrounded correct answers as preference pairs for reward modeling. Grounded answers preferred over correct, but unlocalized, ones.</div>
           </div>
           <div class="uc-card">
             <div class="uc-name">Pretraining Augmentation</div>
-            <div class="uc-desc">Mix into large-scale video pretraining corpora to improve temporal awareness from the ground up, before task-specific fine-tuning.</div>
+            <div class="uc-desc">Mix into large-scale video pretraining corpora to improve temporal awareness from the ground up, prior to task-specific fine-tuning.</div>
           </div>
           <div class="uc-card">
             <div class="uc-name">Probing & Diagnostics</div>
@@ -491,7 +495,7 @@
           </div>
           <div class="uc-card">
             <div class="uc-name">Curriculum Learning</div>
-            <div class="uc-desc">Five categories naturally order by difficulty — train on Action Understanding first, progress toward Causal and General as temporal reasoning matures.</div>
+            <div class="uc-desc">Five categories naturally ordered by difficulty, training on Action Understanding first, and progressing towards Causal and General as temporal reasoning matures.</div>
           </div>
           <div class="uc-card">
             <div class="uc-name">Domain Adaptation</div>
@@ -511,7 +515,7 @@
 
     <div class="bb-col">
       <div class="section-title">VLM Architecture & Temporal Bottleneck</div>
-      <p>Current VLMs share a common architectural pattern: a vision encoder (SigLIP-2, InternViT) converts sampled frames into patch tokens, projected into the token space of an LLM backbone. This frame-sampling design is the primary bottleneck for temporal grounding — inter-frame temporal signals are discarded, and fine-grained motion depends entirely on sampling density.</p>
+      <p>Current VLMs share a common architectural pattern: a vision encoder (SigLIP-2, InternViT) converts sampled frames into patch tokens, projected into the token space of an LLM backbone. This frame-sampling design is the primary bottleneck for temporal grounding. Inter-frame temporal signals are discarded, and fine-grained motion depends entirely on sampling density.</p>
       <p>Proprietary models attempt to address this with larger context windows: Gemini 2.5 Pro supports ~6 hours of video at 1 fps within a 2M-token context. Yet even with expanded windows, performance degrades as video duration increases — indicating that context length alone is insufficient. Open-source models like Qwen3-VL and Molmo2 introduce spatiotemporal grounding but operate at smaller effective temporal resolutions.</p>
       <div class="highlight">ChronoQA's dual supervision directly targets this bottleneck — providing the explicit temporal evidence signal that existing pretraining corpora lack, enabling models to learn grounding rather than shortcut around it.</div>
     </div>
