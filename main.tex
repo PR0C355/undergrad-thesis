@@ -353,46 +353,40 @@ We present an automated pipeline for generating temporally-grounded multiple-cho
   \item Blind Filtering
 \end{enumerate}
 
-All LLM inference was done using the vLLM inference engine with Pydantic-enforced structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
+All LLM inference was performed using the vLLM inference engine with Pydantic-enforced structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
 
 \subsubsection{Stage 1: Question-Answer Generation}
 
-The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video's duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding:
+The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding: Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, and Holistic Understanding. Each template generates 3 questions per video. The model uses the captions and their timestamps to produce a question-answer pair grounded in the video content. All templates constrain questions to avoid direct temporal references (no "when," "beginning," or timestamp references), and only the correct answer carries a temporal annotation in the form of start and end timestamps for the relevant segment. 
 
-\begin{itemize}
-  \item \textbf{Action Understanding}: Tests comprehension of actions or tasks within specific scenes, anchored by scene/setting descriptions (e.g., "What is the character next to the chair doing in the outdoor setting?").
-  \item \textbf{Needle-in-a-Haystack}: Retrieves specific visual or textual details such as colors, brands, clothing, or on-screen text, requiring contextual anchors to uniquely identify subjects.
-  \item \textbf{Ordering}: Tests knowledge of action sequences using relative ordering language (like "immediately after" or "right before") rather than absolute positional references.
-  \item \textbf{Causal Understanding}: Requires cross-segment reasoning about causation and motivation, connecting evidence from two or more separate parts of the video.
-  \item \textbf{Narrative Understanding}: Tests holistic comprehension of the overarching narrative, primary subject, core message, or genre.
-\end{itemize}
 
-Each template generates 3 questions per video. The model is instructed to follow the prompt guidelines and use the captions and their timestamps to generate a question-answer pair grounded in the video content. All templates are constrained to make questions that never reference time directly (no "when," "beginning," or timestamp references), and only the correct answer may carry a temporal annotation in the form of a start and end timestamp for the relevant segment. This ensures that questions can be presented to a viewer without having to reveal any temporal cues.
+% \begin{itemize}
+%   \item \textbf{Action Understanding}: Tests comprehension of actions or tasks within specific scenes, anchored by scene/setting descriptions (e.g., "What is the character next to the chair doing in the outdoor setting?").
+%   \item \textbf{Needle-in-a-Haystack}: Retrieves specific visual or textual details such as colors, brands, clothing, or on-screen text, requiring contextual anchors to uniquely identify subjects.
+%   \item \textbf{Ordering}: Tests knowledge of action sequences using relative ordering language (like "immediately after" or "right before") rather than absolute positional references.
+%   \item \textbf{Causal Understanding}: Requires cross-segment reasoning about causation and motivation, connecting evidence from two or more separate parts of the video.
+%   \item \textbf{Narrative Understanding}: Tests holistic comprehension of the overarching narrative, primary subject, core message, or genre.
+% \end{itemize}
 
-We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. However, QA generation can still fail for a variety of reasons. In some cases, the model hallucinates, exceeding the provided output token budget. In other cases, the model may return JSON with incorrect fields or incorrect formatting. Accounting for these cases, QA generation succeeds approximately 98\% of the time.
+We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. QA generation succeeds approximately $98\%$ of the time, with failures arising from output budget uverruns or malformed JSON responses.
 
 \subsubsection{Stage 2: Validation and Cleaning}
 
-Generated QA pairs then undergo a series of quality control steps.
+Generated QA pairs then undergo three quality control steps.
 
-Firstly, we use pattern matching to detect questions that inherently require temporal information to answer (e.g., "When was X shown?") and discard these questions, as they would be unanswerable without timestamps in the answer. We prompt against the generation of questions like these, but apply this step to ensure that no such questions make it through.
+Firstly, pattern matching detects questions that  require temporal information to answer (e.g., "When was X shown?") and discard them, as they would be unanswerable without timestamps. We prompt against the generation of questions like these, but apply this step to ensure that no such questions make it through.
 
-Secondly, we apply timestamp merging to questions with multiple entries in the timestamp fields. For these questions, adjacent timestamp segments that are separated by less than 2 seconds are merged into a single timestamp range to avoid fragmentation. This was implemented because generated QA pairs would sometimes have multiple timestamp segments that are better represented as a single continuous range.
-
-Finally, we expand the recorded timestamp range to be larger than the ground truth, to increase timestamp variability. Due to the $N$ clips of equal length that video captions are created with, the LLM will usually set ground truth timestamps in $10$ second chunks. As a result, generated ground truth timestamps are usually only as fine and as coarse as the $10$ second clip length. To create questions with more varied timestamp ground truths, we apply a ``timestamp jitter.'' This jitter records the starting timestamp a $\text{random}(1, 3)$ seconds earlier, and the ending timestamp a $\text{random}(1, 3)$ seconds later, than what is recorded in the timestamp ground truth returned by the LLM. This also provides tolerance for imprecise annotations returned by the LLM when timestamp ground truth ranges are smaller than the $10$ second segment length.
+Secondly, timestamp merging consolidates multiple timestamp entries, merging adjacent segments separated by less than 2 seconds into a single continuouos range to avoid fragmentation. Third, a timestamp jitter is applied to increase ground-truth variability. Because captions are generated from fixed $10$-second clips, LLM-generated timestamps are ordinarily constrained to $10$-second boundaries. To produce more varied annotations, the recorded start timestamp is shifter earlier by $X \sim \operatorname{Unif}(\{1, 2, 3\})$ seconds and the end timestamp later by $X \sim \operatorname{Unif}(\{1, 2, 3\})$ seconds, stopping at the existing video's boundaries (Can't be less than 0, or longer than the video). This also provide tolerance for imprecise annotations when ground-truth ranges are smaller than the clip length. 
 
 \subsubsection{Stage 3: Distractor Generation}
 
-For each question, we generate four plausible but incorrect answer options (distractors) in a separate LLM pass. Within the prompt, we instruct the model to produce options that (a) are plausible within the question context, (b) belong to the same semantic category as the correct answer, (c) match the correct answer in length and casing, and (d) are unambiguously incorrect.
+For each question, four plausible but incorrect answer options (distractors) are generated in a separate LLM pass. The model is instructed to produce options that (a) are plausible within the question context, (b) belong to the same semantic category as the correct answer, (c) match the correct answer in length and casing, and (d) are unambiguously incorrect. When relevant caption data is available, narration segments within a $\pm30$-second margin around the correct answer's timestamp are extracted and provided as localized context to ground distractors in actual video content. Questions for which fewer than four valid distractors are generated, are discarded. The correct answer and four distractors are randomly shuffled, and the position of the correct answer is recorded as a letter (A-E).
 
-When relevant caption data is available, we extract narration segments within a $\pm 30$-second margin around the correct answer's timestamp and provide this localized context to the model, in order to ground distractors in actual video content. Questions for which fewer than 4 valid distractors are successfully generated are discarded. The correct answer and four distractors are then randomly shuffled, and the position of the correct answer is recorded as a letter (A-E).
 
 \subsubsection{Stage 4: Blind Filtering}
-
-Motivated by TemporalBench \cite{temporalbench}, we observe that language models can sometimes identify the correct answer without visual input by exploiting shared linguistic patterns between the question and the ground truth, particularly when distractors are lightly edited variants of the correct answer. To filter out questions susceptible to this bias, we apply a blind filtering procedure in which each QA sample, consisting only of the question text and five answer options, with no video, is presented to [X] state-of-the-art LLMs: GPT-5.4  and Qwen3-Next-80B-A3B-Thinking. Each model is prompted to select the correct answer under the same task framing used in full evaluation. Since the random baseline for a five-way multiple-choice question is 20\%, any sample where at least one model selects the correct answer is considered language-solvable and is removed from the dataset, ensuring that retained questions cannot be resolved through linguistic pattern-matching alone and require genuine visual grounding.
+Language models can sometimes identify the correct answer without visual input by exploiting shared linguistic patterns between the question and the ground truth, particularly when distractors are lightly edited variants of the correct answer \cite{temporalbench}. To remove questions susceptible to this bias, we apply a blind filtering procedure in which each QA sample, consisting only of the question text and five answer options, with no videos, is presented to a set of SOTA LLMs. Each model is prompted to select the correct answer under the same task framing used in full evaluation. Any sample for which at least two models selects the correct answer is considered language-solvable, and is removed from the dataset, ensuring that retained questions require genuine visual grounding rather than linguistic pattern-matching. The text-only solvability rate of the retained set is constrained to at or below the random baseline for a five-way multiple-choice question at $20\%$.
 
 \subsubsection{Scale Statistics}
-
 Each final QA instance contains a video ID, question text, correct answer letter, and five answer options (each with associated timestamps), formatted as structured JSON suitable for use in video understanding benchmarks.
 
 \todo{Final dataset: 40,000+ source videos to TBD evaluation subset (likely 5,000-10,000 curated questions) after filtering. Report statistics on video duration distribution, question-type distribution, temporal precision distribution, and domain diversity.}
@@ -405,7 +399,7 @@ Each final QA instance contains a video ID, question text, correct answer letter
        Validation -> Final ChronoQA Dataset). Annotate each stage with approximate counts.}
 
 
-       %%
+%%
 %% ========================================================================
 %%  BENCHMARK DESIGN & TAXONOMY
 %% ========================================================================
