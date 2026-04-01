@@ -160,7 +160,7 @@ The expanding use of large language models in intelligent workflows has triggere
 Temporal grounding, which involves localizing when an event occurs within a video, is a persistent weakness of video-language models (VLMs), in part because existing training data provides answer supervision but lacks temporal evidence supervision. 
 Without it, artificial intelligence cannot reliably assist with tasks such as medical surgery review, security monitoring, or analyzing long-form video data. Yet, existing benchmarks evaluate answer correctness without verifying whether a model identifies the correct supporting temporal evidence.
 % Evaluating [N] VLMs reveals a consistent gap between QA accuracy and Mean Temporal IoU (mIoU), indicating that model frequently select correct answers without identifying the supporting temporal evidence.
-We introduce \textbf{ChronoQA}, a multiple-choice QA benchmark that pairs every correct answer with a verified timestamp interval, providing an explicit grounding target that other video QA datasets omit, and enabling evaluation of answer accuracy and temporal localization quality.
+We introduce \textbf{ChronoQA}, a multiple-choice QA benchmark that pairs every correct answer with a timestamp interval, providing an explicit grounding target that other video QA datasets omit, and enabling evaluation of answer accuracy and temporal localization quality.
 We construct ChronoQA from [X] long-form YouTube videos (30-90 minutes each), yielding [Y] timestamp-anchored multiple choice QA pairs across five task categories: Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, and General. Through multimodel blind filtering, we constrain text-only solvability to [Z]\%, near the 20\% random baseline, ensuring visual perception rather than linguistic bias and visual information leakage. 
 % Evaluating [N] VLMs reveals a consistent gap between QA accuracy and Mean Temporal IoU (mIoU), indicating that models frequently select correct answers without identifying the temporal evidence that supports them. ChronoQA provides a concrete diagnostic for this gap that existing benchmarks cannot measure.
 % Models trained on ChronoQA can be evaluated on both answer accuracy and Mean Temporal IoU (mIoU), enabling direct measurement of whether training on grounded supervision improves temporal localization alongside answer quality.
@@ -183,7 +183,9 @@ We construct ChronoQA from [X] long-form YouTube videos (30-90 minutes each), yi
 
 \section{Introduction}
 % CITE EVERYTHING HERE, EVERY BENCHMARK, MODEL, ETC.
-While conventional video models are proficient in determining the occurrence of an event, they frequently struggle with pinpointing the timing and duration of these events. A legal auditor reviewing a lengthy recording of a deposition must identify the exact timestamp when a key witness provides critical testimony, understand the duration of that testimony, and know the timestamps of the questions posed immediately before and after.
+While conventional video models are proficient in determining the occurrence of an event, they frequently struggle with pinpointing the timing and duration of these events. A student reviewing a recorded lecture must locate the exact moment a concept is introduced, understand how it is developed over the rest of the video, and identify the follow-up examples that make it concrete enough to apply.
+
+% A legal auditor reviewing a lengthy recording of a deposition must identify the exact timestamp when a key witness provides critical testimony, understand the duration of that testimony, and know the timestamps of the questions posed immediately before and after.
 
 % In a clinical review setting, a surgeon does not seek a binary confirmation that a "suturing" or "stitching" event occurred, they require the precise localization of that event to evaluate procedural integrity or investigate post-operative complications. For instance, identifying the specific interval of a suture within 180 minutes of footage is a retrieval task that conventional models are unable to reliably accomplish.
 
@@ -208,7 +210,7 @@ To address this methodological gap, we introduce \textbf{ChronoQA}, a benchmark 
 
 Unlike existing benchmarks that rely on manual annotation or focus narrowly on perceptual recall, ChronoQA enforces strict temporal grounding without temporal leakage, ensuring questions must never reference time (such as "when," "at the beginning," "in the first segment"), yet every correct answer carries precise timestamp annotations locating the evidence within the video. By utilizing multimodal blind filtering and requiring timestamp-anchored answers, we eliminate the static shortcuts prevalent in existing suites and force the model to engage with the temporal axis of the video. This design ensures that model answer selections are evaluated on what they understand, not on their ability to pattern-match temporal cues in the question's text.
 
-The benchmark is organized around a hierarchical taxonomy of five complementary reasoning categories: (i) Action Understanding, testing whether a model can identify actions, tasks, or behaviors occurring within a specific scene or setting; (ii) Needle-in-a-Haystack Retrieval, requiring precise recall of fine-grained visual and textual details (brand names, colors, clothing, on-screen text, counts, and spatial attributes) anchored to specific people, objects, or scenes distributed across the full video; (iii) Temporal Ordering, probing a model's understanding of the sequence and chronology of events, including step ordering, immediate predecessors/successors, and transition sequences between named states; (iv) Causal and Cross-Segment Reasoning, demanding integration of evidence across multiple disjoint video segments to infer causation, motivation, recurring patterns, and consequential relationships; and (v) General Understanding, assessing holistic comprehension of the video's overarching narrative, primary subject, target audience, or overall tone, questions answerable only by a model that has processed the video in its entirety.
+The benchmark is organized around a hierarchical taxonomy of five complementary reasoning categories: (i) Action Understanding, testing whether a model can identify actions, tasks, or behaviors occurring within a specific scene or setting; (ii) Needle-in-a-Haystack Retrieval, requiring precise recall of fine-grained visual and textual details (brand names, colors, clothing, on-screen text, counts, and spatial attributes) anchored to specific people, objects, or scenes distributed across the full video; (iii) Temporal Ordering, probing a model's understanding of the sequence and chronology of events, including step ordering, immediate predecessors/successors, and transition sequences between named states; (iv) Causal and Cross-Segment Reasoning, demanding integration of evidence across multiple disjoint video segments to infer causation, motivation, recurring patterns, and consequential relationships; and (v) Narrative Understanding, assessing holistic comprehension of the video's overarching narrative, primary subject, target audience, or overall tone, questions answerable only by a model that has processed the video in its entirety.
 
 We evaluate several SOTA Multimodal Large Language Models (MLLMs), like Gemini 3 Pro, as well as strong open-source models like Qwen3-VL and Molmo2 on [Y] video-question pairs. We find....FINDINGS TBD
 
@@ -293,7 +295,117 @@ This architectural limitation has measurable consequences for model behavior. Te
 Critically, both TempCompass and NExT-QA operate on short clips where temporal evidence is local and the search window is small. Whether this failure pattern holds in long-form video remains unanswered. Existing temporal grounding datasets such as Charades-STA\cite{charades} and ActivityNet-QA\cite{activitynetqa} use regression-based evaluation but are similarly confined to short videos with known positional biases. Only 40\% of ActivityNet moments span more than 30\% of the video duration, allowing models to exploit distributional shortcuts rather than performing genuine localization. No existing benchmark jointly measures answer accuracy and timestamp precision in a long-form setting. ChronoQA addresses this gap with a dual-metric evaluation protocol that reports both QA accuracy and mIoU over predicted intervals on videos of 30 to 90 minutes, making explicit that aggregate answer accuracy without grounding verification cannot be taken as evidence of temporal grounding ability.
 
 
+
+
+
 %%
+%% ========================================================================
+%%  DATA COLLECTION & ANNOTATION
+%% ========================================================================
+%%
+\section{Data Collection \& Annotation}
+% Describe the fully automated pipeline; sourcing videos, QA pair generation, quality filters,
+% with sufficient detail for reproducibility.
+
+\subsection{Video Sourcing \& Selection Criteria}
+
+YouTube videos provide a large-scale, real-world source of long-form content with diverse metadata and content types. We perform large-scale and filtering by duration (30-90 minutes), content type (instructional, narrative, procedural, sports, vlogs), licensing (Creative Commons or fair-use) and metadata availability. A visual diversity filter is applied to ensure  sufficient temporal dynamics for meaningful temporal reasoning questions. We compute a "delta" score for each video, representing the average visual change across sampled frames using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are excluded.
+% Contrast with Video-MME's \cite{videomme} manual curation of 900 videos, ChronoQA achieves \textbf{44$\times$ the video count} through automation while maintaining quality via multi-stage filtering.
+
+\subsection{Caption Generation Pipeline}
+
+In order to obtain precise event timestamps, we segment each video into fixed-length clips of $10$ seconds. Each segment is passed to Qwen3VL, which samples frames at $1$ frame per second, and projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget per sampled frame.
+
+% TODO: Section about the importance of segment lengths? We looked at 10s, 20s, and 30s.
+% 5s probably too expensive, 20s and 30s had their own caveats. Refer to slides for more info.
+
+Ten-second clips provide sufficient temporal resolution to capture fine-grained event details without over-generalizing across broader scene transitions.
+
+% We segment videos into 10-second clips, which provides sufficient temporal resolution to capture fine-grained event details without over-generalizing across broader scene transitions. 
+
+% We experimented with different fixed-length clips (10s, 20s, and 30s) to understand the impact of temporal granularity on caption quality and downstream question generation. The choice of segment length affects the level of detail in the captions, with shorter segments (like 10s) providing more granular descriptions of specific moments, while longer segments (like 30s) capture broader events and themes. We found that 10-second segments strike a good balance, providing sufficient temporal resolution to capture distinct events without overwhelming the model with too much information in a single segment. Longer segments tended to produce more generalized captions that missed finer details, while shorter segments increased computational costs without significant gains in caption quality.
+
+
+\subsubsection{Caption Token Budget}
+
+Qwen3-VL processes images with a SigLip-2 Vision Transformer \cite{siglip2}, converting pixels into a dynamic number of tokens before compressing them spatially with a learned two-layer MLP merger, and then injecting into the language model at multiple depths using Deepstack \cite{deepstack}. The visual token count is entirely determined by the input image resolution. An image of $H \times W$ pixels will produce exactly $\left(\frac{H}{32} \times \frac{W}{32}\right)$ visual tokens after processing. The factor of $32$ arises from two stages of spatial compression. Firstly, the $16 \times 16$ patch embedding, which is followed by $2 \times 2$ spatial merging from the MLP merger. A $640 \times 640$ image yields roughly $20 \times 20 = 400$ visual tokens, a $1280 \times 1280$ image yields $40 \times 40 = 1{,}600$ tokens.
+
+This budget is controlled during preprocessing stage by specifying \texttt{min\_pixels} and \texttt{max\_pixels}. The processor resizes images to maintain aspect ratio while keeping total pixel count within this range. For video, setting \texttt{total\_pixels} to cap the combined token count of all frames, and a temporal patch size of 2 provides a $2x$ temporal compression by merging consecutive frame pairs. Each video frame is divided into non-overlapping $32 \times 32$ pixel patches. 
+
+The total visual pixel budget is:
+\begin{equation}
+  P_{video} = T_{Video} \times 32^{2} = T_{Video} \times 1024
+\end{equation}
+
+This cap is distributed across all sampled frames. For a $t$-second segment sampled at $2$fps, $F=2t$ frames yield $F / 2=t$ frame pairs after temporal compression, with each frame receiving $T_{FP} = T_{Video}/t$ tokens. Increasing $T_{Video}$ yields finer visual detail but raises two costs. Firstly, the token sequence sent to the model grows proportionally, increasing both memory pressure and inference time. Secondly, a larger token budget per clip expands the KV cache allocated per sequence, directly constraining concurrent batch throughput before PagedAttention \cite{pagedattention} must begin preempting sequences. If $T_{Video}$ is too low relative to $t$, each frame receives so few tokens that fine visual details are lost.
+
+All segments inputs are submitted concurrently to the vLLM inference engine. Qwen3-VL-30B generates one free-form caption per segment, which is recorded alongside its timestamp and source video ID.
+
+\subsection{Methods}
+
+\subsubsection{Overview}
+
+We present an automated pipeline for generating temporally-grounded multiple-choice questions from equal duration video narration captions. The pipeline operates in four stages:
+\begin{enumerate}
+  \item Question-Answer Generation
+  \item Validation and Cleaning
+  \item Distractor Synthesis
+  \item Blind Filtering
+\end{enumerate}
+
+All LLM inference was done using the vLLM inference engine with Pydantic-enforced structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
+
+\subsubsection{Stage 1: Question-Answer Generation}
+
+The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video's duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding:
+
+\begin{itemize}
+  \item \textbf{Action Understanding}: Tests comprehension of actions or tasks within specific scenes, anchored by scene/setting descriptions (e.g., "What is the character next to the chair doing in the outdoor setting?").
+  \item \textbf{Needle-in-a-Haystack}: Retrieves specific visual or textual details such as colors, brands, clothing, or on-screen text, requiring contextual anchors to uniquely identify subjects.
+  \item \textbf{Ordering}: Tests knowledge of action sequences using relative ordering language (like "immediately after" or "right before") rather than absolute positional references.
+  \item \textbf{Causal Understanding}: Requires cross-segment reasoning about causation and motivation, connecting evidence from two or more separate parts of the video.
+  \item \textbf{Narrative Understanding}: Tests holistic comprehension of the overarching narrative, primary subject, core message, or genre.
+\end{itemize}
+
+Each template generates 3 questions per video. The model is instructed to follow the prompt guidelines and use the captions and their timestamps to generate a question-answer pair grounded in the video content. All templates are constrained to make questions that never reference time directly (no "when," "beginning," or timestamp references), and only the correct answer may carry a temporal annotation in the form of a start and end timestamp for the relevant segment. This ensures that questions can be presented to a viewer without having to reveal any temporal cues.
+
+We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. However, QA generation can still fail for a variety of reasons. In some cases, the model hallucinates, exceeding the provided output token budget. In other cases, the model may return JSON with incorrect fields or incorrect formatting. Accounting for these cases, QA generation succeeds approximately 98\% of the time.
+
+\subsubsection{Stage 2: Validation and Cleaning}
+
+Generated QA pairs then undergo a series of quality control steps.
+
+Firstly, we use pattern matching to detect questions that inherently require temporal information to answer (e.g., "When was X shown?") and discard these questions, as they would be unanswerable without timestamps in the answer. We prompt against the generation of questions like these, but apply this step to ensure that no such questions make it through.
+
+Secondly, we apply timestamp merging to questions with multiple entries in the timestamp fields. For these questions, adjacent timestamp segments that are separated by less than 2 seconds are merged into a single timestamp range to avoid fragmentation. This was implemented because generated QA pairs would sometimes have multiple timestamp segments that are better represented as a single continuous range.
+
+Finally, we expand the recorded timestamp range to be larger than the ground truth, to increase timestamp variability. Due to the $N$ clips of equal length that video captions are created with, the LLM will usually set ground truth timestamps in $10$ second chunks. As a result, generated ground truth timestamps are usually only as fine and as coarse as the $10$ second clip length. To create questions with more varied timestamp ground truths, we apply a ``timestamp jitter.'' This jitter records the starting timestamp a $\text{random}(1, 3)$ seconds earlier, and the ending timestamp a $\text{random}(1, 3)$ seconds later, than what is recorded in the timestamp ground truth returned by the LLM. This also provides tolerance for imprecise annotations returned by the LLM when timestamp ground truth ranges are smaller than the $10$ second segment length.
+
+\subsubsection{Stage 3: Distractor Generation}
+
+For each question, we generate four plausible but incorrect answer options (distractors) in a separate LLM pass. Within the prompt, we instruct the model to produce options that (a) are plausible within the question context, (b) belong to the same semantic category as the correct answer, (c) match the correct answer in length and casing, and (d) are unambiguously incorrect.
+
+When relevant caption data is available, we extract narration segments within a $\pm 30$-second margin around the correct answer's timestamp and provide this localized context to the model, in order to ground distractors in actual video content. Questions for which fewer than 4 valid distractors are successfully generated are discarded. The correct answer and four distractors are then randomly shuffled, and the position of the correct answer is recorded as a letter (A-E).
+
+\subsubsection{Stage 4: Blind Filtering}
+
+Motivated by TemporalBench \cite{temporalbench}, we observe that language models can sometimes identify the correct answer without visual input by exploiting shared linguistic patterns between the question and the ground truth, particularly when distractors are lightly edited variants of the correct answer. To filter out questions susceptible to this bias, we apply a blind filtering procedure in which each QA sample, consisting only of the question text and five answer options, with no video, is presented to [X] state-of-the-art LLMs: GPT-5.4  and Qwen3-Next-80B-A3B-Thinking. Each model is prompted to select the correct answer under the same task framing used in full evaluation. Since the random baseline for a five-way multiple-choice question is 20\%, any sample where at least one model selects the correct answer is considered language-solvable and is removed from the dataset, ensuring that retained questions cannot be resolved through linguistic pattern-matching alone and require genuine visual grounding.
+
+\subsubsection{Scale Statistics}
+
+Each final QA instance contains a video ID, question text, correct answer letter, and five answer options (each with associated timestamps), formatted as structured JSON suitable for use in video understanding benchmarks.
+
+\todo{Final dataset: 40,000+ source videos to TBD evaluation subset (likely 5,000-10,000 curated questions) after filtering. Report statistics on video duration distribution, question-type distribution, temporal precision distribution, and domain diversity.}
+
+\todo{Dataset Statistics table (Total Videos, Total Questions, Mean/Median/Max Video Duration,
+       Questions per Task Category, Domain Distribution, Mean Temporal Precision of Answers)}
+\todo{Distribution Plots (Video Duration, Answer Timestamp Distribution, Distractor Temporal Distance)}
+\todo{Pipeline Diagram flowchart (YouTube Crawl -> Metadata Extraction -> Temporal Event
+       Identification -> LLM-based QA Generation -> Quality Filtering Cascade -> Human
+       Validation -> Final ChronoQA Dataset). Annotate each stage with approximate counts.}
+
+
+       %%
 %% ========================================================================
 %%  BENCHMARK DESIGN & TAXONOMY
 %% ========================================================================
@@ -365,17 +477,17 @@ This category establishes a distinction between \textbf{comprehension} (understa
 
 \todo{Add example questions for Causal Understanding.}
 
-\subsubsection{General} \newline
+\subsubsection{Narrative} \newline
 
 \textbf{Goal:} Assess high-level synthesis of a video's overarching narrative arc, primary subject matter, core message, or overall mood and tone. This requires the model to have processed the video in its entirety.
 
-General questions test whether a model has formed a coherent global understanding of the video, and not just a collection of local observations. Correct answers require understanding a video's broader context, including its genre, overarching goal, main thesis, primary technique, or dominant tone. Questions are anchored to properties that can only be determined from the full video. A question that can be answered with the first 30 seconds of the video as context, or from any single representative segment, would fail to qualify.
+Narrative questions test whether a model has formed a coherent global understanding of the video, and not just a collection of local observations. Correct answers require understanding a video's broader context, including its genre, overarching goal, main thesis, primary technique, or dominant tone. Questions are anchored to properties that can only be determined from the full video. A question that can be answered with the first 30 seconds of the video as context, or from any single representative segment, would fail to qualify.
 
-Despite testing high-level understanding, General questions are held to strict objectivity standards. Questions that are too vague to score reliably (like \emph{"What is the mood of the video?"} without a verifiable/objective correct answer) are excluded during quality filtering. All General questions must have a single defensible correct answer that a human viewer would agree upon after watching the complete video.
+Despite testing high-level understanding, Narrative questions are held to strict objectivity standards. Questions that are too vague to score reliably (like \emph{"What is the mood of the video?"} without a verifiable/objective correct answer) are excluded during quality filtering. All Narrative questions must have a single defensible correct answer that a human viewer would agree upon after watching the complete video.
 
-\textbf{What it addresses:} SEED-Bench includes "action prediction" and "procedure understanding" as high-level video tasks, but these tasks focus on fine-grained categories of basic actions and action segmentation. Video-MME \cite{videomme} includes "summarization" as a task category, but answers are often derivable from a few key scenes. \textbf{ChronoQA}'s General category specifically enforces full-video dependency. The correct answer should reflect the \emph{aggregate} of the video's content, not any one segment of the video.
+\textbf{What it addresses:} SEED-Bench includes "action prediction" and "procedure understanding" as high-level video tasks, but these tasks focus on fine-grained categories of basic actions and action segmentation. Video-MME \cite{videomme} includes "summarization" as a task category, but answers are often derivable from a few key scenes. \textbf{ChronoQA}'s Narrative category specifically enforces full-video dependency. The correct answer should reflect the \emph{aggregate} of the video's content, not any one segment of the video.
 
-\todo{Add example questions for General.}
+\todo{Add example questions for Narrative.}
 
 \subsection{Design Principles}
 
@@ -390,118 +502,6 @@ Despite testing high-level understanding, General questions are held to strict o
 \todo{Task Taxonomy Visualization figure (hierarchical tree showing 5 task categories with examples)}
 \todo{Distribution Visualization figure (questions across task categories and video duration ranges)}
 \todo{Distractor design illustration figure}
-
-
-%%
-%% ========================================================================
-%%  DATA COLLECTION & ANNOTATION
-%% ========================================================================
-%%
-\section{Data Collection \& Annotation}
-% Describe the fully automated pipeline; sourcing videos, QA pair generation, quality filters,
-% with sufficient detail for reproducibility.
-
-\subsection{Video Sourcing \& Selection Criteria}
-
-YouTube videos are an ideal source for large-scale, real-world video data due to their diversity, availability of metadata, and variety of content types. We perform large-scale crawling of YouTube videos, before filtering by duration (target: 30-90 minutes to qualify as "long-form"), content type (instructional, narrative, procedural, sports, vlogs), availability of metadata, and Creative Commons or fair-use licensing considerations. We also apply a visual diversity filter to ensure the videos contain sufficient temporal dynamics to warrant temporal reasoning questions. To quantify this, we compute a "delta" score for each video, representing the average visual change across sampled frames, using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are filtered out to ensure our dataset emphasizes temporal dynamics. 
-% Contrast with Video-MME's \cite{videomme} manual curation of 900 videos, ChronoQA achieves \textbf{44$\times$ the video count} through automation while maintaining quality via multi-stage filtering.
-
-\subsection{Caption Generation Pipeline}
-
-In order to obtain precise event timestamps, we segment the videos to produce $N$ fixed-length clips of $10$ seconds long each. Each segment is then passed through the QwenVL processor, which samples the video frames at $1$ frame per second, and then projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget for each sampled frame from the entire video.
-
-% TODO: Section about the importance of segment lengths? We looked at 10s, 20s, and 30s.
-% 5s probably too expensive, 20s and 30s had their own caveats. Refer to slides for more info.
-
-We experimented with different fixed-length clips (10s, 20s, and 30s) to understand the impact of temporal granularity on caption quality and downstream question generation. The choice of segment length affects the level of detail in the captions, with shorter segments (like 10s) providing more granular descriptions of specific moments, while longer segments (like 30s) capture broader events and themes. We found that 10-second segments strike a good balance, providing sufficient temporal resolution to capture distinct events without overwhelming the model with too much information in a single segment. Longer segments tended to produce more generalized captions that missed finer details, while shorter segments increased computational costs without significant gains in caption quality.
-
-\subsubsection{Caption Token Budget}
-
-Qwen3-VL processes images with a SigLip-2 Vision Transformer \cite{siglip2}, converting pixels into a dynamic number of tokens before compressing them spatially with a learned two-layer MLP merger, and then injecting into the language model at multiple depths using Deepstack \cite{deepstack}. The visual token count is entirely determined by the input image resolution. An image of $H \times W$ pixels will produce exactly $\left(\frac{H}{32} \times \frac{W}{32}\right)$ visual tokens after processing. The division (by 32) arises from two stages of spatial compression. Firstly, the $16 \times 16$ patch embedding, followed by $2 \times 2$ spatial merging from the MLP merger. A $640 \times 640$ image yields roughly $20 \times 20 = 400$ visual tokens, a $1280 \times 1280$ image yields $40 \times 40 = 1{,}600$ tokens, and so forth.
-
-We can control this budget during the preprocessing stage by specifying \texttt{min\_pixels} and \texttt{max\_pixels}. The processor resizes images to maintain aspect ratio while keeping total pixel count within this range. When processing video, we can set \texttt{total\_pixels} to cap the combined token count of all frames. For video, the temporal patch size of 2 provides a $2\times$ temporal compression, merging every two consecutive frames into a frame-pair, halving the token cost.
-
-Each video frame is divided into non-overlapping patches of size $32 \times 32$ pixels. The number of tokens allotted for encoding video content is given by $T_{Video}$, meaning the total number of visual pixels fed to the model is capped at:
-\begin{equation}
-  P_{video} = T_{Video} \times 32^{2} = T_{Video} \times 1024
-\end{equation}
-
-This cap is distributed across all sampled frames. If a video has $F$ frames, after applying temporal compression, each frame gets roughly $2T_{Video}/F$ tokens worth of patches. Frame content or visual complexity does not impact token allocation. The budget is divided evenly, and the processor downscales frames as needed to fit. The minimum floor is fixed at $16 \times 32^{2} = 16{,}384$ pixels total, preventing degenerate inputs where very short clips would receive almost no visual information.
-
-Spread across frames sampled over a $t$-second segment at $2$ fps, $F = 2t$, and after temporal compression we have $F/2 = t$ frame pairs. Meaning each frame-pair gets an equal share of the total token budget $T_{Video}$, at roughly $T_{FP} = \frac{T_{Video}}{t}$ tokens per frame-pair.
-
-A higher $T_{Video}$ value presents finer visual detail but has two costs:
-\begin{enumerate}
-  \item The token sequence sent to the model grows proportionally, increasing memory pressure and inference time for processing a clip.
-  \item A larger maximum token budget for each clip increases the KV cache allocated to each sequence, directly constraining how many segments the inference engine can process concurrently before PagedAttention must start preempting sequences \cite{pagedattention}.
-\end{enumerate}
-
-If $T_{Video}$ is too low relative to $t$, each frame will get so few tokens that fine details in the frames may be lost. To this extent, we conducted experiments and qualitative inspection of captions generated with a token per frame-pair budget of 32, 64, and 128.
-
-All segment inputs across the batch are submitted concurrently to the vLLM inference engine, using Qwen3-VL-30B to generate one free-form caption per segment. We record each caption along with the corresponding timestamp, and the video of origin.
-
-\subsection{Methods}
-
-\subsubsection{Overview}
-
-We present an automated pipeline for generating temporally-grounded multiple-choice questions from equal duration video narration captions. The pipeline operates in four stages:
-\begin{enumerate}
-  \item Question-Answer Generation
-  \item Validation and Cleaning
-  \item Distractor Synthesis
-  \item Blind Filtering
-\end{enumerate}
-
-All LLM inference was done using the vLLM inference engine with Pydantic-enforced structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
-
-\subsubsection{Stage 1: Question-Answer Generation}
-
-The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video's duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding:
-
-\begin{itemize}
-  \item \textbf{Action Understanding}: Tests comprehension of actions or tasks within specific scenes, anchored by scene/setting descriptions (e.g., "What is the character next to the chair doing in the outdoor setting?").
-  \item \textbf{Needle-in-a-Haystack}: Retrieves specific visual or textual details such as colors, brands, clothing, or on-screen text, requiring contextual anchors to uniquely identify subjects.
-  \item \textbf{Ordering}: Tests knowledge of action sequences using relative ordering language (like "immediately after" or "right before") rather than absolute positional references.
-  \item \textbf{Causal Understanding}: Requires cross-segment reasoning about causation and motivation, connecting evidence from two or more separate parts of the video.
-  \item \textbf{General Understanding}: Tests holistic comprehension of the overarching narrative, primary subject, core message, or genre.
-\end{itemize}
-
-Each template generates 3 questions per video. The model is instructed to follow the prompt guidelines and use the captions and their timestamps to generate a question-answer pair grounded in the video content. All templates are constrained to make questions that never reference time directly (no "when," "beginning," or timestamp references), and only the correct answer may carry a temporal annotation in the form of a start and end timestamp for the relevant segment. This ensures that questions can be presented to a viewer without having to reveal any temporal cues.
-
-We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. However, QA generation can still fail for a variety of reasons. In some cases, the model hallucinates, exceeding the provided output token budget. In other cases, the model may return JSON with incorrect fields or incorrect formatting. Accounting for these cases, QA generation succeeds approximately 98\% of the time.
-
-\subsubsection{Stage 2: Validation and Cleaning}
-
-Generated QA pairs then undergo a series of quality control steps.
-
-Firstly, we use pattern matching to detect questions that inherently require temporal information to answer (e.g., "When was X shown?") and discard these questions, as they would be unanswerable without timestamps in the answer. We prompt against the generation of questions like these, but apply this step to ensure that no such questions make it through.
-
-Secondly, we apply timestamp merging to questions with multiple entries in the timestamp fields. For these questions, adjacent timestamp segments that are separated by less than 2 seconds are merged into a single timestamp range to avoid fragmentation. This was implemented because generated QA pairs would sometimes have multiple timestamp segments that are better represented as a single continuous range.
-
-Finally, we expand the recorded timestamp range to be larger than the ground truth, to increase timestamp variability. Due to the $N$ clips of equal length that video captions are created with, the LLM will usually set ground truth timestamps in $10$ second chunks. As a result, generated ground truth timestamps are usually only as fine and as coarse as the $10$ second clip length. To create questions with more varied timestamp ground truths, we apply a ``timestamp jitter.'' This jitter records the starting timestamp a $\text{random}(1, 3)$ seconds earlier, and the ending timestamp a $\text{random}(1, 3)$ seconds later, than what is recorded in the timestamp ground truth returned by the LLM. This also provides tolerance for imprecise annotations returned by the LLM when timestamp ground truth ranges are smaller than the $10$ second segment length.
-
-\subsubsection{Stage 3: Distractor Generation}
-
-For each question, we generate four plausible but incorrect answer options (distractors) in a separate LLM pass. Within the prompt, we instruct the model to produce options that (a) are plausible within the question context, (b) belong to the same semantic category as the correct answer, (c) match the correct answer in length and casing, and (d) are unambiguously incorrect.
-
-When relevant caption data is available, we extract narration segments within a $\pm 30$-second margin around the correct answer's timestamp and provide this localized context to the model, in order to ground distractors in actual video content. Questions for which fewer than 4 valid distractors are successfully generated are discarded. The correct answer and four distractors are then randomly shuffled, and the position of the correct answer is recorded as a letter (A-E).
-
-\subsubsection{Stage 4: Blind Filtering}
-
-For the final quality gate, we apply blind filtering to remove questions answerable from general knowledge alone, without access to the video or its captions. A text-only LLM is presented with each question and its five options without any video context. We conduct this process with several LLMs, including Qwen3-Next-80B-A3B-Thinking, the model most likely to have bias to the text-based distractors, since it was used to generate them. If a sufficient number of models' predicted answer matches the ground-truth correct answer, the question is presumed to be answerable from world knowledge beyond the random baseline and is discarded. Only questions that the blind model answers incorrectly are retained, ensuring the final dataset genuinely requires video understanding.
-
-\subsubsection{Scale Statistics}
-
-Each final QA instance contains a video ID, question text, correct answer letter, and five answer options (each with associated timestamps), formatted as structured JSON suitable for use in video understanding benchmarks.
-
-\todo{Final dataset: 40,000+ source videos to TBD evaluation subset (likely 5,000-10,000 curated questions) after filtering. Report statistics on video duration distribution, question-type distribution, temporal precision distribution, and domain diversity.}
-
-\todo{Dataset Statistics table (Total Videos, Total Questions, Mean/Median/Max Video Duration,
-       Questions per Task Category, Domain Distribution, Mean Temporal Precision of Answers)}
-\todo{Distribution Plots (Video Duration, Answer Timestamp Distribution, Distractor Temporal Distance)}
-\todo{Pipeline Diagram flowchart (YouTube Crawl -> Metadata Extraction -> Temporal Event
-       Identification -> LLM-based QA Generation -> Quality Filtering Cascade -> Human
-       Validation -> Final ChronoQA Dataset). Annotate each stage with approximate counts.}
 
 
 %%
@@ -565,7 +565,7 @@ where $N$ is the total number of questions, $\hat{a}_i$ is the model's selected 
 QA Accuracy is reported at two levels of granularity:
 \begin{itemize}
   \item \textbf{Overall Accuracy}: Computed across all questions in the dataset.
-  \item \textbf{Per-Category Accuracy}: separately for each of the five task categories (Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, General).
+  \item \textbf{Per-Category Accuracy}: separately for each of the five task categories (Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, Narrative).
 \end{itemize}
 
 
