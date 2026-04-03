@@ -268,7 +268,7 @@ Among existing works, LongVideoBench \cite{lvbench} most closely aligns with the
 
 
 \subsection{Temporal Reasoning in Vision-Language Models}
-Current VLMs share a common architectural bottleneck: a vision encoder converts sampled frames into patch tokens projected into an LLM backbone, discarding inter-frame temporal signals entirely. Fine-grained motion and transition information therefore depends on frame sampling density, which remains sparse even in frontier models. Proprietary systems have attempted to compensate through larger context windows. Gemini 2.5 Pro \cite{gemini2.5-video} supports approximately six hours of video within a two-million-token context, and the natively multimodal GPT-5 achieves 86.7\% on Video-MME, yet even with these expanded budgets, VLMs exhibit systematic performance degradation as video duration increases, indicating that scaling context length alone does not resolve the underlying temporal grounding deficit \cite{longvideosurvey}. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
+Current VLMs share a common architectural bottleneck: a vision encoder converts sampled frames into patch tokens projected into an LLM backbone, discarding inter-frame temporal signals entirely. Fine-grained motion and transition information therefore depends on frame sampling density, which remains sparse even in frontier models. Proprietary systems have attempted to compensate through larger context windows. Gemini 2.5 Pro \cite{gemini2.5-video} supports approximately six hours of video within a two-million-token context, and the natively multimodal GPT-5 \cite{gpt-5} achieves 86.7\% on Video-MME, yet even with these expanded budgets, VLMs exhibit systematic performance degradation as video duration increases, indicating that scaling context length alone does not resolve the underlying temporal grounding deficit \cite{longvideosurvey}. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
 
 This architectural limitation has measurable consequences for model behavior. TempCompass \cite{tempcompass} evaluates temporal perception across five aspects: action, speed, direction, attribute change, and event order. Using conflicting video pairs that share identical static content but differ along a single temporal dimension, they neutralize single-frame shortcuts and language priors. Across eight SOTA Video LLMs, models perform near-randomly on speed, direction, and attribute change, achieving reasonable accuracy only on action, a category largely solvable from static features. NExT-QA \cite{nextqa} demonstrates a parallel trend in reasoning, where the disparity between model and human performance is significantly greater for causal and temporal questions than for descriptive ones, even when dealing with brief and well-structured videos. Categorical failures appear even on simpler temporal tasks. SpookyBench \cite{spookybench} presents information exclusively through temporal noise sequences, stripping away all spatial content, resulting in fifteen SOTA VLMs scoring 0\% on tasks where humans achieve over 98\% accuracy. Another work, VLM4D \cite{vlm4d}, shows that models frequently fail to resolve basic physical dynamics, such as distinguishing clockwise from counter-clockwise rotation or correctly labeling the direction of lateral movement. Together, these results suggest that current VLMs exploit static visual shortcuts wherever available and fall back towards chance when those shortcuts are removed.
 
@@ -471,11 +471,11 @@ ChronoQA evaluates four models spanning the full range of capabilities in the cu
     \toprule
     Model & Provider & Access & Context / Frame Limit \\
     \midrule
-    GPT-5.4 & OpenAI & API & 400K tokens \\
-    Gemini 3.1 Flash & Google & API & Native long-video; up to 1M tokens \\
+    GPT-5.4 \cite{gpt-5} & OpenAI & API & 400K tokens \\
+    Gemini 3.1 Flash \cite{gemini3} & Google & API & Native long-video; up to 1M tokens \\
     % LLaVA-NeXT & Open-source & Local Inference & ~4k tokens \\
-    Qwen3-VL-8B &  Open-source & Local Inference & 256K (dynamic resolution, expandable to 1M) \\
-    Molmo2-8B & Allen AI / Open-source & Local Inference & 36K \\
+    Qwen3-VL-8B \cite{qwen3-vl} &  Open-source & Local Inference & 256K (dynamic resolution, expandable to 1M) \\
+    Molmo2-8B \cite{molmo2} & Allen AI / Open-source & Local Inference & 36K \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -551,7 +551,7 @@ Following CG-Bench, in order to improve the robustness of question grounding eva
 Reliable answer extraction is essential for consistent scoring across models with varying output styles. We adopt a two-stage extraction procedure, following MMBench \cite{mmbench}:
 
 Rule-based extraction (primary): Parse the model's output for an explicit option label ($A, B, C, D,$ or $E$) using regex matching. This succeeds for the majority of well-behaved model outputs.
-LLM-based extraction (fallback): For outputs that do not contain an unambiguous option label, a separate GPT-4o judge is prompted with the model's full response and the original answer options to identify the intended selection. This handles cases where a model re-states the answer text rather than the option letter.
+LLM-based extraction (fallback): For outputs that do not contain an unambiguous option label, a separate GPT-4o \cite{gpt-4o} judge is prompted with the model's full response and the original answer options to identify the intended selection. This handles cases where a model re-states the answer text rather than the option letter.
 
 Timestamp extraction follows a similar two-stage approach, starting with regex parsing for structured outputs (e.g., "Start: 34.5s, End: 42.1s"), then followed by an LLM-based parser for free-form outputs.
 If a model explicitly refuses to answer, or if both extraction stages fail, the question is scored as incorrect (0 accuracy) and assigned a full-video fallback interval for tIoU computation. Refusal rates are reported per model as a diagnostic.
