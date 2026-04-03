@@ -194,26 +194,11 @@ We construct ChronoQA from 423 long-form YouTube videos (10-90 minutes each), yi
 % CITE EVERYTHING HERE, EVERY BENCHMARK, MODEL, ETC.
 While conventional video models are proficient in determining the occurrence of an event, they frequently struggle with pinpointing the timing and duration of these events. A student reviewing a recorded lecture must locate the exact moment a concept is introduced, understand how it is developed over the rest of the video, and identify the follow-up examples that make it concrete enough to apply.
 
-% A legal auditor reviewing a lengthy recording of a deposition must identify the exact timestamp when a key witness provides critical testimony, understand the duration of that testimony, and know the timestamps of the questions posed immediately before and after.
-
-% In a clinical review setting, a surgeon does not seek a binary confirmation that a "suturing" or "stitching" event occurred, they require the precise localization of that event to evaluate procedural integrity or investigate post-operative complications. For instance, identifying the specific interval of a suture within 180 minutes of footage is a retrieval task that conventional models are unable to reliably accomplish.
-
 Temporal grounding addresses this challenge by anchoring semantic understanding to a rigorous timeline, which is crucial for effectively addressing complex video understanding tasks \cite{univtg}.
 This anchoring enables precise retrieval of specific moments by natural language query, causal linking of events separated by minutes, and structured summarization where every claim traces back to a verifiable segment. Without robust temporal grounding, the outputs of video-language models remain ungrounded, lacking the evidence required for applications where temporal accuracy is non-negotiable. By enforcing a strict mapping between semantic content and the temporal axis, we enable a deeper, more structured evidence-based form of video reasoning necessary for deploying VLMs in medical, legal, and industrial auditing. However,  without a benchmark that jointly evaluates answer correctness and temporal localization, there is no way to know whether any of these capabilities have actually been achieved.
 
-% Temporal grounding addresses this challenge by anchoring semantic understanding to a rigorous timeline. \,This alignment facilitates three primary capabilities essential for professional-grade video models:
-% \begin{enumerate}
-%   \item High-Precision Retrieval: Enabling users to navigate massive datasets by pinpointing minute-long intervals based on complex natural language queries
-%   \item Causal Reasoning: Establishing a structural backbone that allows the model to link separate events, such as a specific instrument choice at minute 14 and a subsequent physiological response at minute 47, thereby moving beyond correlation and towards a logical understanding of the workflow
-%   \item Structured Summarization: Transforming hours of raw footage into a hierarchical, evidence-based report where every summarized claim is linked to a verifiable temporal segment
-% \end{enumerate}
-
 Current video benchmarks provide questions and answers but lack explicit temporal grounding. They do not direct models to the specific moments where answers can be found. This leaves models unable to reliably locate key events or reason precisely about when things occur in a video. While some works propose temporal understanding, they remain clip-level discrimination tasks that neither require models to localize events in time nor reason about their precise temporal position within a video, leaving temporal localization entirely unaddressed \cite{temporalbench}. Without the isolation of the temporal structure, models are left to rely on static visual cues or linguistic shortcuts. Meanwhile, traditional temporal grounding datasets \cite{charades} \cite{activitynetqa} use regression-based evaluation over short videos with known distributional biases, and are incompatible with the standardized multiple choice question (MCQ) evaluation paradigm that has become the lingua franca of VLM assessment. The problem is not that models answer incorrectly, but that we have no way to verify whether a correct answer reflects genuine temporal understanding or a lucky guess. The solution is conceptually simple: every correct answer should carry a verified timestamp, so that answer accuracy and temporal localization can be jointly evaluated.
 
-% Some other works propose temporal ordering
-
-% These benchmarks also often fail to capture the discrepancy between semantic recognition (understanding?) and temporal localization. More recent works suggest that VLM benchmark scores systematically overestimate video understanding performance on real-world tasks. TimeBlind \cite{timeblind} demonstrates that a state-of-the-art (SOTA) model like Gemini 3 Pro, despite scoring 88.4\% on Video-MME \cite{videomme}, achieves only 48.2\% instance accuracy on fine-grained temporal discrimination tasks in short 10-second clips, drastically trailing the human baseline of 98.2\%. This suggests that high performance on existing QA metrics does not guarantee a model's ability to anchor its reasoning in time. This discrepancy between QA accuracy and temporal precision is a byproduct of current evaluation construction. 
-% Most existing benchmarks do not isolate temporal structure, leaving models to rely on static visual cues or linguistic shortcuts. 
 
 To address this methodological gap, we introduce \textbf{ChronoQA}, a benchmark that directly measures a model's temporal grounding abilities. Each question is a timestamp-anchored MCQ benchmark drawn from long-form video (10–90 minutes). ChronoQA utilizes a dual-metric evaluation protocol that distinguishes models that answer correctly, from models that both answer correctly and identify accurate supporting evidence. 
 
@@ -227,27 +212,11 @@ Our contributions are:
 
 \begin{enumerate}
   \item ChronoQA, a long-video MCQ benchmark that requires models to both answer correctly and localize the supporting evidence in long-form video.
-  % a [Y]-question timestamp-anchored MCQ benchmark that focuses on temporal grounding in long-form videos covering five temporal reasoning categories.
+
   \item A grounding integrity check that exposes models answering correctly for the wrong reasons, addressing a failure mode invisible to existing benchmarks.
-  % A dual-metric evaluation protocol (QA Accuracy + mIoU) that differentiates between models that provide correct answers and those that not only deliver correct answers but also pinpoint relevant supporting evidence.
   \item An evaluation of several leading state-of-the-art (SOTA) MLLMs and their temporal grounding abilities.
 \end{enumerate}
 
-
-% VLMs have been shown capable of exploiting linguistic patterns. MMStar demonstrated
-% that the initial Gemini Pro model \cite{gemini1.0} was capable of achieving 42.9\% on MMMU \cite{mmmu} without
-% any visual context. The subsequent MMMU-Pro \cite{mmmu-pro} was created specifically to eliminate
-% this problem of creating questions solvable by text, without visual context. In video
-% benchmarks, models can frequently succeed using frame-level spatial cues without genuine
-% temporal reasoning. MMBench-Video \cite{mmbenchvideo} found that some models (like Qwen-VL-Chat \cite{qwen-vl}), can perform
-% better with a single frame of context rather than multiple, indicating that temporal
-% information is not always necessary. ChronoQA's timestamp anchoring makes taking these
-% kinds of shortcuts structurally infeasible, requiring grounding the correct answer to
-% a specific moment in the video. We present three core contributions:
-
-
-
-% Evaluation proceeds in two passes: answer selection (QA Accuracy) and temporal localization (Mean Temporal IoU), enabling diagnosis of whether a correct answer reflects genuine grounding or surface-level pattern matching. Our contributions are:
 
 \begin{figure}[htbp]
     \centering
@@ -263,20 +232,6 @@ Our contributions are:
 %%  RELATED WORK
 %% ========================================================================
 %%
-% \section{Related Work}
-% % Structured, critical review of VLM architectures, benchmarks, and temporal/video
-% % understanding. Establishing where each falls short and how ChronoQA addresses that gap.
-
-% \subsection{Vision-Language Models for Video}
-% Current VLMs share a common architectural pattern: a vision encoder (SigLIP \cite{siglip}, InternViT \cite{internvl}, etc.) converts sampled frames into patch tokens, which are projected into the token space of an LLM backbome. This frame-sampling design is the primary bottleneck for temporal grounding, as inter-frame temporal signals are discarded, and fine-grained motion or transition information depends entirely on frame sampling density.
-
-% Proprietary models attempt to address this constraint through larger context windows. Gemini 2.5 Pro supports approximately 6 hours of video sampled at 1 fps within a 2-million-token context length \cite{gemini2.5-video}, achieving 82\% on Video-MME. Gemini 3 Pro reduces this context window to 1 million tokens while improving multi-step reasoning. Unlike GPT-4, the natively multimodal GPT-5 scores 86.7\% on Video-MME, and up to 78.4\% on MMMU. Even with these expanded context windows, VLMs are shown to exhibit a degradation in performance as video duration increases \cite{longvideosurvey}, indicating that simply increasing context length is insufficient for resolving temporal grounding limitations. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
-
-% While humans achieve over 98\% accuracy on SpookyBench \cite{spookybench}, fifteen state-of-the-art VLMs failed to identify any content, scoring 0\%. This categorical failure highlights a critical time-blindness in current architectures, which rely heavily on spatial features and struggle to decode information presented through purely temporal noise sequences, directly motivating ChronoQA's focus.
-
-% Current state-of-the-art VLMs struggle with spatio-temporal awareness. VLM4D \cite{vlm4d} illustrates this, showing models can still fail at basic physical movement, often struggling to distinguish between clockwise/counter-clockwise rotations or simple lateral movements (e.g., a car moving right being labeled as moving left). This motivates a benchmark focused on temporal grounding, assessing how things change over time, rather than just spatial comprehension.
-
-% While current state-of-the-art VLMs show promise in general video understanding, they fundamentally struggle with spatio-temporal awareness. As VLM4D \cite{vlm4d} illustrates, models frequently fail to resolve basic physical dynamics, such as distinguishing between clockwise and counter-clockwise rotations. This persistent time-blindness motivates the need for benchmarks like SpookyBench \cite{spookybench}, which isolates temporal grounding by stripping away all spatial shortcuts. By forcing models to derive meaning solely from changes over time, we can evaluate a model's inherent temporal reasoning independent of its spatial comprehension. While humans achieve over 98\% accuracy on SpookyBench, fifteen state-of-the-art VLMs failed to identify any content, scoring 0\%. This categorical failure further highlights the critical time-blindness in current architectures that struggle to decode information presented through purely temporal noise sequences, directly motivating ChronoQA's focus.
 \section{Related Work}
 
 \subsection{Video QA Benchmarks}
@@ -291,16 +246,6 @@ Current Video Question Answering (VideoQA) benchmarks largely overlook the neces
     \toprule
     \textbf{Benchmark} & \textbf{\# Videos} & \textbf{\# Questions} & \textbf{Avg Duration} & \textbf{Timestamp} & \textbf{Format} & \textbf{Metric} \\
     \midrule
-    % Video-MME \cite{videomme} & 900 & 2,700 & 10 min & \times & MCQ & Acc \\
-    % MVBench \cite{mvbench} & 4,000 & 4,000 & 10 sec & \times & MCQ & Acc \\
-    % EgoSchema \cite{egoschema} & 5,000 & 5,000 & 3 min & \times & MCQ & Acc \\
-    % TemporalBench & 10,000 & 10,000 & 10 sec & \times & Binary & Acc \\
-    
-    % SEED-Bench \cite{seedbench} & 20,000 & 19,000 & 30 sec & \times & MCQ & Acc \\
-    % Charades-STA \cite{charades} & 6,670 & 16,128 & 30 sec & \checkmark & Regression & IoU \\
-    % ActivityNet-QA \cite{activitynetqa} & 5,800 & 58,000 & 2 min & \checkmark & Regression & IoU \\
-    % LongVideoBench \cite{lvbench} & 3,500 & 6,678 & 60 min & Given & MCQ & Acc \\
-    % CG-Bench \cite{cgbench} & 1,219 & 12,129 & 27 min & Target & MCQ / Open-ended & Acc / IoU / CRR \\
     Video-MME \cite{videomme} & 900 & 2,700 & 10 min & None & MCQ & Acc \\
     MVBench \cite{mvbench} & 4,000 & 4,000 & 10 sec & None & MCQ & Acc \\
     EgoSchema \cite{egoschema} & 5,000 & 5,000 & 3 min & None & MCQ & Acc \\
@@ -320,26 +265,13 @@ Current Video Question Answering (VideoQA) benchmarks largely overlook the neces
 A separate class of benchmarks evaluates temporal structures but does so at a coarse granularity. MVBench \cite{mvbench} treats action localization through broad beginning, middle, or end bins, effectively conflating temporal ordering with localization precision. NExT-QA \cite{nextqa} advances beyond descriptive benchmarks by explicitly targeting causal and temporal action reasoning across 5,440 videos, demonstrating that top-performing models achieve near-human accuracy on descriptive questions, but fail substantially on causal and temporal ones. However, NExT-QA videos average only 44 seconds in length, and no question requires the model to identify a supporting timestamp interval. Instead, the benchmark measures whether the model reasons correctly about temporal structure, not whether it can locate that structure within a longer video. Another work, TemporalBench \cite{temporalbench}, assesses sensitivity to temporal dynamics such as action frequency, motion magnitude, and event order across approximately 10K QA pairs, but does so via binary caption discrimination rather than timestamp anchoring. These benchmarks tackle temporal reasoning, understanding sequence and causality, while leaving the more rigorous problem of temporal localization largely unaddressed.
 
 Among existing works, LongVideoBench \cite{lvbench} most closely aligns with the objectives of ChronoQA, featuring 6,678 MCQs for videos up to one hour. However, its "referring reasoning" format provides timestamps as input features, inverting the grounding task, prompting models to describe, or reason about, events at a given interval rather than identifying the interval corresponding to a described event. 
-% Finally, traditional grounding datasets such as Charades-STA \cite{charades} and ActivityNet Captions \cite{activitynetqa} typically utilize regression-based start/end timestamp prediction. This methodology is structurally incompatible with the MCQ paradigm and is prone to distributional biases. Notably, Charades-STA exhibits a high density of ground-truth moments near video boundaries, while ActivityNet moments frequently span over 30\% of the video duration, rewarding imprecise predictions \cite{tgsv}. ChronoQA departs from these regression-based frameworks, utilizing a contrastive MCQ structure that necessitates the discrimination of temporally plausible alternatives.
-
-% \begin{table}[h]
-%   \centering
-%   \caption{Comparison of ChronoQA with existing benchmarks.}
-%   \label{tab:benchmark_comparison}
-%   % \todo{Add comparison table}
-%   % Columns: Benchmark, Venue, Modality, \# Videos, \# Questions, Video Duration,
-%   %          Answer Format, Timestamp-Anchored?, Temporal Grounding Focus?, Scale Pipeline
-%   % Rows: Video-MME, MVBench, EgoSchema, TemporalBench, LongVideoBench,
-%   %        SEED-Bench, Charades-STA, ActivityNet Captions, ChronoQA
-% \end{table}
-
 
 
 \subsection{Temporal Reasoning in Vision-Language Models}
 Current VLMs share a common architectural bottleneck: a vision encoder converts sampled frames into patch tokens projected into an LLM backbone, discarding inter-frame temporal signals entirely. Fine-grained motion and transition information therefore depends on frame sampling density, which remains sparse even in frontier models. Proprietary systems have attempted to compensate through larger context windows. Gemini 2.5 Pro supports approximately six hours of video within a two-million-token context, and the natively multimodal GPT-5 achieves 86.7\% on Video-MME, yet even with these expanded budgets, VLMs exhibit systematic performance degradation as video duration increases, indicating that scaling context length alone does not resolve the underlying temporal grounding deficit \cite{longvideosurvey}. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
 
 This architectural limitation has measurable consequences for model behavior. TempCompass \cite{tempcompass} evaluates temporal perception across five aspects: action, speed, direction, attribute change, and event order. Using conflicting video pairs that share identical static content but differ along a single temporal dimension, they neutralize single-frame shortcuts and language priors. Across eight SOTA Video LLMs, models perform near-randomly on speed, direction, and attribute change, achieving reasonable accuracy only on action, a category largely solvable from static features. NExT-QA \cite{nextqa} demonstrates a parallel trend in reasoning, where the disparity between model and human performance is significantly greater for causal and temporal questions than for descriptive ones, even when dealing with brief and well-structured videos. Categorical failures appear even on simpler temporal tasks. SpookyBench \cite{spookybench} presents information exclusively through temporal noise sequences, stripping away all spatial content, resulting in fifteen SOTA VLMs scoring 0\% on tasks where humans achieve over 98\% accuracy. Another work, VLM4D \cite{vlm4d}, shows that models frequently fail to resolve basic physical dynamics, such as distinguishing clockwise from counter-clockwise rotation or correctly labeling the direction of lateral movement. Together, these results suggest that current VLMs exploit static visual shortcuts wherever available and fall back towards chance when those shortcuts are removed.
-% Taken together, these results indicate that current models have not learned to derive meaning from temporal change at any level of abstraction — from low-level motion direction to high-level causal reasoning.
+
 
 Critically, both TempCompass and NExT-QA operate on short clips where temporal evidence is local and the search window is small. Whether this failure pattern holds in long-form video remains unanswered. Existing temporal grounding datasets such as Charades-STA\cite{charades} and ActivityNet-QA\cite{activitynetqa} use regression-based evaluation but are similarly confined to short videos with known positional biases. Only 40\% of ActivityNet moments span more than 30\% of the video duration, allowing models to exploit distributional shortcuts rather than performing genuine localization. No existing benchmark jointly measures answer accuracy and timestamp precision in a long-form setting. ChronoQA addresses this gap with a dual-metric evaluation protocol that reports both QA accuracy and mIoU over predicted intervals on videos of 10 to 90 minutes, making explicit that aggregate answer accuracy without grounding verification cannot be taken as evidence of temporal grounding ability.
 
@@ -351,59 +283,23 @@ Critically, both TempCompass and NExT-QA operate on short clips where temporal e
     \label{fig:figure6}
 \end{figure*}
 
-% \begin{table*}[t]
-%   \centering
-%   \caption{Comparison of ChronoQA with existing video understanding benchmarks. ChronoQA uniquely combines long-form video with timestamp-level temporal grounding in a multiple-choice format.}
-%   \label{tab:benchmark_comparison}
-%   \begin{tabular}{lcccccc}
-%     \toprule
-%     \textbf{Benchmark} & \textbf{\# Videos} & \textbf{\# Questions} & \textbf{Avg Duration} & \textbf{Timestamp} & \textbf{Format} & \textbf{Metric} \\
-%     \midrule
-%     Video-MME & 900 & 2,700 & 10 min & \xmark & MCQ & Acc \\
-%     MVBench & 4,000 & 4,000 & 10 sec & \xmark & MCQ & Acc \\
-%     EgoSchema & 5,000 & 5,000 & 3 min & \xmark & MCQ & Acc \\
-%     TemporalBench & 10,000 & 10,000 & 10 sec & \xmark & Binary & Acc \\
-%     LongVideoBench & 3,500 & 6,678 & 60 min & Given & MCQ & Acc \\
-%     SEED-Bench & 20,000 & 19,000 & 30 sec & \xmark & MCQ & Acc \\
-%     Charades-STA & 6,670 & 16,128 & 30 sec & \cmark & Regression & IoU \\
-%     ActivityNet-QA & 5,800 & 58,000 & 2 min & \cmark & Regression & IoU \\
-%     \midrule
-%     \textbf{ChronoQA} & \textbf{TBD} & \textbf{TBD} & \textbf{50 min} & \cmark & \textbf{MCQ} & \textbf{Acc + mIoU} \\
-%     \bottomrule
-%   \end{tabular}
-% \end{table*}
-
-
-
-
 %%
 %% ========================================================================
 %%  DATA COLLECTION & ANNOTATION
 %% ========================================================================
 %%
 \section{Data Collection \& Annotation}
-% Describe the fully automated pipeline; sourcing videos, QA pair generation, quality filters,
-% with sufficient detail for reproducibility
 
 \subsection{Video Sourcing \& Selection Criteria}
 
 YouTube videos provide a large-scale, real-world source of long-form content with diverse metadata and content types. We perform large-scale and filtering by duration (10-90 minutes), content type (instructional, narrative, procedural, sports, vlogs), licensing (Creative Commons or fair-use) and metadata availability. A visual diversity filter is applied to ensure  sufficient temporal dynamics for meaningful temporal reasoning questions. We compute a "delta" score for each video, representing the average visual change across sampled frames using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are excluded.
-% Contrast with Video-MME's \cite{videomme} manual curation of 900 videos, ChronoQA achieves \textbf{44$\times$ the video count} through automation while maintaining quality via multi-stage filtering.
 
 
 \subsection{Caption Generation Pipeline}
 
 In order to obtain precise event timestamps, we segment each video into fixed-length clips of $10$ seconds. Each segment is passed to Qwen3VL, which samples frames at $1$ frame per second, and projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget per sampled frame.
 
-% TODO: Section about the importance of segment lengths? We looked at 10s, 20s, and 30s.
-% 5s probably too expensive, 20s and 30s had their own caveats. Refer to slides for more info.
-
 Ten-second clips provide sufficient temporal resolution to capture fine-grained event details without over-generalizing across broader scene transitions.
-
-% We segment videos into 10-second clips, which provides sufficient temporal resolution to capture fine-grained event details without over-generalizing across broader scene transitions. 
-
-% We experimented with different fixed-length clips (10s, 20s, and 30s) to understand the impact of temporal granularity on caption quality and downstream question generation. The choice of segment length affects the level of detail in the captions, with shorter segments (like 10s) providing more granular descriptions of specific moments, while longer segments (like 30s) capture broader events and themes. We found that 10-second segments strike a good balance, providing sufficient temporal resolution to capture distinct events without overwhelming the model with too much information in a single segment. Longer segments tended to produce more generalized captions that missed finer details, while shorter segments increased computational costs without significant gains in caption quality.
-
 
 \subsubsection{Caption Token Budget}
 
@@ -438,15 +334,6 @@ All LLM inference was performed using the vLLM inference engine with Pydantic-en
 
 The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding: Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, and Holistic Understanding. Each template generates 3 questions per video. The model uses the captions and their timestamps to produce a question-answer pair grounded in the video content. All templates constrain questions to avoid direct temporal references (no "when," "beginning," or timestamp references), and only the correct answer carries a temporal annotation in the form of start and end timestamps for the relevant segment. 
 
-
-% \begin{itemize}
-%   \item \textbf{Action Understanding}: Tests comprehension of actions or tasks within specific scenes, anchored by scene/setting descriptions (e.g., "What is the character next to the chair doing in the outdoor setting?").
-%   \item \textbf{Needle-in-a-Haystack}: Retrieves specific visual or textual details such as colors, brands, clothing, or on-screen text, requiring contextual anchors to uniquely identify subjects.
-%   \item \textbf{Ordering}: Tests knowledge of action sequences using relative ordering language (like "immediately after" or "right before") rather than absolute positional references.
-%   \item \textbf{Causal Understanding}: Requires cross-segment reasoning about causation and motivation, connecting evidence from two or more separate parts of the video.
-%   \item \textbf{Narrative Understanding}: Tests holistic comprehension of the overarching narrative, primary subject, core message, or genre.
-% \end{itemize}
-
 We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. QA generation succeeds approximately $98\%$ of the time, with failures arising from output budget overruns or malformed JSON responses.
 
 \subsubsection{Stage 2: Validation and Cleaning}
@@ -478,25 +365,12 @@ Each final QA instance contains a video ID, question text, correct answer letter
 \subsubsection{Human Baseline Collection}
 To establish a human performance reference point, we collected annotations from a single evaluator with prior familiarity with the benchmark's task format and category definitions. The evaluator was provided access to the full source video for each instance alongside the question and five answer options, and was instructed to select the correct answer and to annotate the specific timestamp interval within the video they believed best supported that answer, the same dual-response format used in model evaluation. No time constraints were imposed. The evaluator completed 100 instances drawn from a stratified random sample across the five task categories. Human QA accuracy on this set was 91.2\%, and human mIoU was 82.5\%, establishing a performance ceiling substantially above all evaluated models on both metrics. We acknowledge that single-annotator baselines do not permit the calculation of inter-annotator agreement and may reflect individual variation in timestamp granularity. We therefore present these figures as an indicative upper bound rather than a definitive measure of human capability on ChronoQA, and identify the collection of a multi-annotator human baseline as a priority for future work.
 
-% \todo{Final dataset: 40,000+ source videos to TBD evaluation subset (likely 5,000-10,000 curated questions) after filtering. Report statistics on video duration distribution, question-type distribution, temporal precision distribution, and domain diversity.}
-
-% \todo{Dataset Statistics table (Total Videos, Total Questions, Mean/Median/Max Video Duration,
-%        Questions per Task Category, Domain Distribution, Mean Temporal Precision of Answers)}
-
-% \todo{Distribution Plots (Video Duration, Answer Timestamp Distribution, Distractor Temporal Distance)}
-% \todo{Pipeline Diagram flowchart (YouTube Crawl -> Metadata Extraction -> Temporal Event
-%        Identification -> LLM-based QA Generation -> Quality Filtering Cascade -> Human
-%        Validation -> Final ChronoQA Dataset). Annotate each stage with approximate counts.}
-
-
 %%
 %% ========================================================================
 %%  BENCHMARK DESIGN & TAXONOMY
 %% ========================================================================
 %%
 \section{Benchmark Design}
-% Present ChronoQA task structure, question types, and design principles, showing how each
-% design decision is motivated by the limitations of prior work.
 
 \subsection{Task Formulation}
 
@@ -571,20 +445,6 @@ Narrative Understanding questions test whether a model has formed a coherent glo
 
 ChronoQA is designed around four core principles that jointly ensure benchmark integrity. First, questions require reasoning over events separated by minutes rather than seconds, preventing single-frame shortcuts. Second, correct answers are uniformly distributed across positions $A-E$ to eliminate positional bias. Third, ChronoQA adopts the standard five-option MCQ format, using accuracy as a primary metric while encoding temporal precision through a timestamp paired with the correct answer. This replaces the IoU-based regression metrics of prior works with a format compatible with standardized VLM evaluation. Finally, distractors are not randomly sampled, and are semantically plausible events drawn from different moments in the same video, ensuring that the task requires temporal grounding rather than event recognition.
 
-% \begin{itemize}
-%   \item \textbf{Temporal grounding prevents linguistic shortcuts} (addresses MMStar's \cite{mmstar} finding that 42.9\% of MMMU is solvable text-only): All answer options reference the same video segment, so models cannot eliminate distractors by comparing timestamps. Only genuine visual inspection of the segment can distinguish correct from incorrect descriptions.
-%   \item \textbf{Long-form videos prevent single-frame solving} (addresses MMBench-Video's \cite{mmbenchvideo} finding that 1-frame sometimes matches 8-frame performance): Questions require reasoning over events separated by minutes, not seconds, preventing single-frame solving.
-%   \item \textbf{Balanced answer distributions prevent position bias} (adopts MMBench's \cite{mmbench} CircularEval insight): Correct answers are uniformly distributed across positions $A, B, C, D, E$.
-%   \item \textbf{Five-option MCQ enables standardized evaluation} (addresses Charades-STA/ActivityNet Captions' reliance on IoU-based regression metrics): ChronoQA uses accuracy, the universal metric of VLM benchmarks, while encoding temporal precision through timestamp pairing.
-%   \item \textbf{Distractor design philosophy}: Distractors are not random. Instead, they are semantically plausible events that occur at different timestamps in the same video, or the correct event paired with an incorrect timestamp. This ensures the task genuinely requires temporal grounding, not just event recognition.
-% \end{itemize}
-
-% \todo{Task Taxonomy Visualization figure (hierarchical tree showing 5 task categories with examples)}
-% \todo{Distribution Visualization figure (questions across task categories and video duration ranges)}
-% \todo{Distractor design illustration figure}
-
-
-
 %%
 %% ========================================================================
 %%  EVALUATION PROTOCOL
@@ -632,7 +492,6 @@ We provide each model with a standardized input consisting of three components:
 \end{enumerate}
 
 The full prompt template is fixed across all models. No chain-of-thought instructions are included in the primary evaluation (zero-shot direct answer). To ensure fair comparison between models with different input limits, we defined a standardized frame budget of 64 uniformly sampled frames as the default evaluation setting.
-% Gemini models are evaluated at both the $64$-frame budget and with native full-video ingestion, to isolate the effects of frame density from architectural long-video support.
 
 \subsection{Metrics}
 
@@ -700,26 +559,6 @@ If a model explicitly refuses to answer, or if both extraction stages fail, the 
 \subsection{Baseline Configurations}
 Four baseline conditions are evaluated to establish lower bounds and verify benchmark integrity. All baselines use the same answer extraction pipeline.
 
-% \begin{table*}
-%     \centering
-%     \begin{tabular}{llll}
-%         \toprule
-%         \textbf{Baseline} & \textbf{Input} & \textbf{Purpose} & \textbf{Target} \\ 
-%         \midrule
-%         Random & None & Theoretical lower bound & 20\% \\ 
-%         \addlinespace
-%         Text-only & Question + options (no video) & Confirm linguistic shortcut resistance & $<$ 20\% \\ 
-%         \addlinespace
-%         Single-frame & 1 random frame + question & Confirm temporal multi-frame requirement & $<$ 30\% \\ 
-%         \addlinespace
-%         Human & Full video + question & Establish performance ceiling & $\sim$85\% \\ 
-%         \bottomrule
-%     \end{tabular}
-%     \caption{Baseline Evaluation Metrics}
-%     \label{tab:baselines}
-% \end{table*}
-
-
 The text-only baseline is the most critical integrity check. If any text-only model exceeds 20\% accuracy overall, the affected questions are flagged for manual review and potential removal from the evaluation set, following MMStar's multi-modal gain filtering procedure.
 
 \subsection{Reproducibility and Access}
@@ -743,21 +582,6 @@ All evaluation code, prompt templates, answer extraction scripts, and model infe
 
 
 \subsection{Main Results}
-% \begin{table*}[h]
-% \centering
-% \caption{Comparative Analysis of Model Performance Metrics}
-% \label{tab:model_metrics}
-% \begin{tabular}{lcccccc}
-% \toprule
-% \textbf{Model} & \textbf{Total} & \textbf{QA Acc} & \textbf{mIoU} & \textbf{G-Acc} & \textbf{Recall@0.1} & \textbf{Recall@0.5} \\
-% \midrule
-% GPT-5-4 & 897 & 0.4961 & 0.0329 & 0.0078 & 0.1081 & 0.0100 \\
-% Qwen3-VL-8B & 897 & 0.3233 & 0.0258 & 0.0067 & 0.0502 & 0.0145 \\
-% Gemini 3.1 Flash Lite & 254 & 0.6496 & 0.0796 & 0.0197 & 0.1929 & 0.0394 \\
-% Molmo2-8B & 450 & 0.6756 & 0.1011 & 0.0356 & 0.2378 & 0.0644 \\
-% \bottomrule
-% \end{tabular}
-% \end{table*}
 \begin{table*}[h]
 \centering
 \caption{We report QA Accuracy, Mean Temporal IoU (mIoU), and Grounded Accuracy (G-Acc), where a successful trial requires both the correct answer and a $tIoU \ge 0.5$. Human performance significantly outperforms all models, particularly in grounding precision (mIoU), where even the best-performing model, Molmo2, falls below 11\%.}
@@ -778,11 +602,6 @@ Molmo2-8B & 450 & 0.6756 & 0.1011 & 0.0356 & 0.2378 & 0.0644 \\
 
 In Table 3, we report the performance of four state-of-the-art video-language models on our ChronoQA benchmark. Overall, none of the models achieve a G-Acc (Grounded Accuracy) exceeding 3.5\%. Among the instances evaluated, Molmo2 achieves the highest scores across all shared question categories, notably reaching 80.7\% accuracy on Narrative Understanding and 73.2\% on Causal Understanding. These results, while based on a subset of $450$ benchmark instances due to inference constraints described in Section 7.2, challenge the assumption that parameter scale is the primary driver of performance on temporally demanding video tasks. Within the evaluated subset, Molmo2's performance suggests that training efficiency and video-native architectural design may matter more than model size for this class of task, a finding that warrants further investigation at full benchmark scale.
 
-
-% Contrary to the prevailing narrative that scaling is the sole arbiter of performance, our findings indicate that architectural efficiency in specialized open-source models can supersede the brute-force capabilities of multi-billion parameter systems. While the performance gap in video understanding has historically favored large-scale proprietary models, the emergence of Molmo2 challenges this trajectory.
-
-% Our evaluation reveals that Molmo2, an open-source model with a significantly smaller footprint, consistently outperforms Gemini 3.1 and GPT-5.4 in QA accuracy and temporal grounding precision. This suggests that the limitations previously attributed to architecture, specifically regarding temporal reasoning and capture of granular details, may be mitigated through optimized training rather than sheer parameter count.
-
 Despite the high QA accuracy typically associated with models like GPT-5.4, there remains a profound grounding gap where models succeed in identifying what happened but fail to localize \textit{when} it occurred. The grounding gap underlying this result is examined in detail in Section 6.2.
 
 
@@ -791,12 +610,6 @@ Despite the high QA accuracy typically associated with models like GPT-5.4, ther
 Within the subset of instances on which it was evaluated, Molmo2 achieves the highest mIoU of any model at 10.1\%, compared to 8.0\% for Gemini 3.1 Flash and 3.3\% for GPT-5.4. Although direct comparison across models is complicated by the unequal evaluation subsets described in Section 7.2, the pattern is consistent with the hypothesis that specialized open-source models may be better suited to high-density temporal reasoning than general-purpose systems trained primarily for language. A recurring phenomenon is observable across all models regardless of scale. GPT-5.4, for instance, achieves a robust 49.6\% QA accuracy on its full evaluated set yet produces an mIoU of just 3.3\%, a gap that is difficult to attribute to dataset artifacts given ChronoQA's blind filtering controls. Qwen3-VL-8B shows a similar pattern at 32.3\% accuracy and 2.6\% mIoU. 
 
 These scores indicate that models are exploiting surface-level cues like answer plausibility, common-sense elimination, and linguistic coherence, rather than engaging in temporal reasoning. The disconnect is most visible in Narrative Understanding, where both Molmo2 and GPT-5.4 exceed 80\% QA accuracy while their mIoU scores remain below 11\%, underscoring that high answer-level performance does not imply evidence-level grounding.
-
-
-% While proprietary models are estimated to exceed 100 billion parameters, their performance in temporal grounding remains marginal. Molmo2's ability to achieve a 10.1\% mIoU suggests that specialized open-source models may be better suited for high-density temporal reasoning that general-purpose LLMs. We observe a recurring phenomenon where high-parameter models like GPT-5.4 achieve robust QA scores (49.6\%) yet fail almost entirely at temporal evidence localization (3.2\% mIoU). Models with a similar frame-sampling strategy such as Qwen3-VL-8B, struggle to maintain parity, yielding a 32.3\% accuracy and 2.6\%. Unlike these models, Gemini 3.1 has native video support, scoring competitively on QA accuracy (65.0\%) but falling short on temporal grounding at 8.0\% mIoU.
-% but scores similarly to Molmo2 on QA accuracy (64.9\%) but falls slightly short on temporal grounding at 7.9\%. 
-
-% These scores ultimately reveal that models exploit surface-level cues (answer plausibility, common sense, elimination) rather than temporal reasoning. Despite both Molmo2 and GPT-5.4 performing strongly on Narrative Understanding questions (80.8\% and 83.1\% QA accuracy, respectively), their mIoU scores reach no higher than 10.1\%, underscoring the disconnect between answer-level correctness and evidence-level localization.
 
 \subsection{Baseline Integrity Results}
 To assess the degree to which models exploit dataset shortcuts rather than performing genuine temporal reasoning, we conducted a blind filtering evaluation in which answer choices were presented without any accompanying video or temporal context. A model that performs substantially above chance under these conditions can be presumed to rely on linguistic priors or common-sense heuristics rather than video comprehension. Across all models, blind accuracy remained near or below the expected random baseline for the multiple-choice format, confirming that ChronoQA questions resist shortcut exploitation and require video-grounded reasoning. This result validates the integrity of our benchmark and strengthens the interpretation that the grounding gap documented in Table 3 reflects true model deficiencies rather than artifacts of question design.
@@ -862,8 +675,6 @@ Evaluation of Gemini 3.1 Flash was conducted via the Gemini API, which supports 
 \paragraph{Molmo2 Inference Latency.}
 Molmo2 was evaluated using a self-hosted inference implementation rather than a managed API endpoint. While this approach affords greater reproducibility and control over model behavior, it introduced significant inference latency due to the absence of optimized serving infrastructure, such as continuous batching, quantization, or compiled kernels, typically employed in production deployments. As a result, full benchmark evaluation of Molmo2 was completed on 450 of 897 instances, and total wall-clock evaluation time was substantially longer than for API-served models. We do not believe that inference implementation affected the \textit{quality} of model outputs, as the model weights and generation parameters were held constant throughout. However, the reduced sample count may introduce some variability in reported aggregate metrics relative to a full-benchmark evaluation. Future work should prioritize optimized inference pipelines, such as HuggingFace Transformers or TensorRT-LLM backends, instead of vLLM, to enable complete and time-efficient evaluation of open-source models at benchmark scale.
 
-
-
 %%
 %% ========================================================================
 %%  CONCLUSION
@@ -878,12 +689,6 @@ These results carry several implications for future work. Temporal grounding sho
 
 ChronoQA is available for continued evaluation, and we anticipate that it will serve as a useful diagnostic tool as the video-language modeling community develops architectures better suited to the demands of temporal reasoning.
 
-
-%%
-%% The acknowledgments section is defined using the "acks" environment
-%% (and NOT an unnumbered section). This ensures the proper
-%% identification of the section in the article metadata, and the
-%% consistent spelling of the heading.
 \begin{acks}
 
 This research was conducted with the support of the Multimodal Video Perception research group in the Computer Science Department at The University of North Carolina at Chapel Hill. I am especially grateful to Dr. Gedas Bertasius for his guidance on this project, among many, and his support in my time as an undergraduate. I am also deeply grateful for the support and patient mentorship of Yulu Pan and Ce Zhang, for their feedback, guidance, and for always being available to answer my many questions.
