@@ -206,7 +206,7 @@ Unlike existing benchmarks that rely on manual annotation or focus narrowly on p
 
 The benchmark is organized around a hierarchical taxonomy of five complementary reasoning categories: (i) Action Understanding, testing whether a model can identify actions, tasks, or behaviors occurring within a specific scene or setting; (ii) Needle-in-a-Haystack Retrieval, requiring precise recall of fine-grained visual and textual details (brand names, colors, clothing, on-screen text, counts, and spatial attributes) anchored to specific people, objects, or scenes distributed across the full video; (iii) Temporal Ordering, probing a model's understanding of the sequence and chronology of events, including step ordering, immediate predecessors/successors, and transition sequences between named states; (iv) Causal and Cross-Segment Reasoning, demanding integration of evidence across multiple disjoint video segments to infer causation, motivation, recurring patterns, and consequential relationships; and (v) Narrative Understanding, assessing holistic comprehension of the video's overarching narrative, primary subject, target audience, or overall tone, questions answerable only by a model that has processed the video in its entirety.
 
-We evaluate several SOTA Multimodal Large Language Models (MLLMs), like Gemini 3, as well as strong open-source models like Qwen3-VL and Molmo2 on ChronoQA to assess their ability to temporally ground their answers in MCQ-based QA tasks.
+We evaluate several SOTA Multimodal Large Language Models (MLLMs), like Gemini 3.1 Flash \cite{gemini3}, as well as strong open-source models like Qwen3-VL \cite{qwen3-vl} and Molmo2 \cite{molmo2} on ChronoQA to assess their ability to temporally ground their answers in MCQ-based QA tasks.
 
 Our contributions are:
 
@@ -268,7 +268,7 @@ Among existing works, LongVideoBench \cite{lvbench} most closely aligns with the
 
 
 \subsection{Temporal Reasoning in Vision-Language Models}
-Current VLMs share a common architectural bottleneck: a vision encoder converts sampled frames into patch tokens projected into an LLM backbone, discarding inter-frame temporal signals entirely. Fine-grained motion and transition information therefore depends on frame sampling density, which remains sparse even in frontier models. Proprietary systems have attempted to compensate through larger context windows. Gemini 2.5 Pro supports approximately six hours of video within a two-million-token context, and the natively multimodal GPT-5 achieves 86.7\% on Video-MME, yet even with these expanded budgets, VLMs exhibit systematic performance degradation as video duration increases, indicating that scaling context length alone does not resolve the underlying temporal grounding deficit \cite{longvideosurvey}. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
+Current VLMs share a common architectural bottleneck: a vision encoder converts sampled frames into patch tokens projected into an LLM backbone, discarding inter-frame temporal signals entirely. Fine-grained motion and transition information therefore depends on frame sampling density, which remains sparse even in frontier models. Proprietary systems have attempted to compensate through larger context windows. Gemini 2.5 Pro \cite{gemini2.5-video} supports approximately six hours of video within a two-million-token context, and the natively multimodal GPT-5 achieves 86.7\% on Video-MME, yet even with these expanded budgets, VLMs exhibit systematic performance degradation as video duration increases, indicating that scaling context length alone does not resolve the underlying temporal grounding deficit \cite{longvideosurvey}. Open-source models like Qwen3-VL and Molmo2 introduce spatio-temporal grounding and video tracking, but operate at smaller effective temporal resolutions.
 
 This architectural limitation has measurable consequences for model behavior. TempCompass \cite{tempcompass} evaluates temporal perception across five aspects: action, speed, direction, attribute change, and event order. Using conflicting video pairs that share identical static content but differ along a single temporal dimension, they neutralize single-frame shortcuts and language priors. Across eight SOTA Video LLMs, models perform near-randomly on speed, direction, and attribute change, achieving reasonable accuracy only on action, a category largely solvable from static features. NExT-QA \cite{nextqa} demonstrates a parallel trend in reasoning, where the disparity between model and human performance is significantly greater for causal and temporal questions than for descriptive ones, even when dealing with brief and well-structured videos. Categorical failures appear even on simpler temporal tasks. SpookyBench \cite{spookybench} presents information exclusively through temporal noise sequences, stripping away all spatial content, resulting in fifteen SOTA VLMs scoring 0\% on tasks where humans achieve over 98\% accuracy. Another work, VLM4D \cite{vlm4d}, shows that models frequently fail to resolve basic physical dynamics, such as distinguishing clockwise from counter-clockwise rotation or correctly labeling the direction of lateral movement. Together, these results suggest that current VLMs exploit static visual shortcuts wherever available and fall back towards chance when those shortcuts are removed.
 
@@ -292,12 +292,12 @@ Critically, both TempCompass and NExT-QA operate on short clips where temporal e
 
 \subsection{Video Sourcing \& Selection Criteria}
 
-YouTube videos provide a large-scale, real-world source of long-form content with diverse metadata and content types. We perform large-scale and filtering by duration (10-90 minutes), content type (instructional, narrative, procedural, sports, vlogs), licensing (Creative Commons or fair-use) and metadata availability. A visual diversity filter is applied to ensure  sufficient temporal dynamics for meaningful temporal reasoning questions. We compute a "delta" score for each video, representing the average visual change across sampled frames using CLIP embeddings and cosine similarity. Videos with low delta scores (indicating static content) are excluded.
+YouTube videos provide a large-scale, real-world source of long-form content with diverse metadata and content types. We perform large-scale and filtering by duration (10-90 minutes), content type (instructional, narrative, procedural, sports, vlogs), licensing (Creative Commons or fair-use) and metadata availability. A visual diversity filter is applied to ensure  sufficient temporal dynamics for meaningful temporal reasoning questions. We compute a "delta" score for each video, representing the average visual change across sampled frames using CLIP embeddings \cite{clip} and cosine similarity. Videos with low delta scores (indicating static content) are excluded.
 
 
 \subsection{Caption Generation Pipeline}
 
-In order to obtain precise event timestamps, we segment each video into fixed-length clips of $10$ seconds. Each segment is passed to Qwen3VL, which samples frames at $1$ frame per second, and projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget per sampled frame.
+In order to obtain precise event timestamps, we segment each video into fixed-length clips of $10$ seconds. Each segment is passed to Qwen3-VL, which samples frames at $1$ frame per second, and projects them into a pixel-budget space of $T_{Video} = C \cdot 32 \cdot 32$ tokens, where $C$ is a user-specified token budget per sampled frame.
 
 Ten-second clips provide sufficient temporal resolution to capture fine-grained event details without over-generalizing across broader scene transitions.
 
@@ -328,11 +328,11 @@ We present an automated pipeline for generating temporally-grounded multiple-cho
   \item Blind Filtering
 \end{enumerate}
 
-All LLM inference was performed using the vLLM inference engine with Pydantic-enforced structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
+All LLM inference was performed using the vLLM inference engine with Pydantic-enforced \cite{pydantic} structured outputs to guarantee well-formed JSON while minimizing post-hoc parsing.
 
 \subsubsection{Stage 1: Question-Answer Generation}
 
-The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding: Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, and Holistic Understanding. Each template generates 3 questions per video. The model uses the captions and their timestamps to produce a question-answer pair grounded in the video content. All templates constrain questions to avoid direct temporal references (no "when," "beginning," or timestamp references), and only the correct answer carries a temporal annotation in the form of start and end timestamps for the relevant segment. 
+The pipeline takes as input a JSON file mapping video IDs to caption data, where each entry contains a list of timestamped sentences and the original video duration. We define five specialized prompt templates, each targeting a distinct facet of video understanding: Action Understanding, Needle-in-the-Haystack, Ordering, Causal Understanding, and Narrative Understanding. Each template generates 3 questions per video. The model uses the captions and their timestamps to produce a question-answer pair grounded in the video content. All templates constrain questions to avoid direct temporal references (no "when," "beginning," or timestamp references), and only the correct answer carries a temporal annotation in the form of start and end timestamps for the relevant segment. 
 
 We use Qwen3-Next-80B-A3B-Thinking \cite{qwen3} constrained to a Pydantic schema via vLLM's \texttt{StructuredOutputsParams} to guarantee each response contains well-formed question-answer pairs with associated timestamps. QA generation succeeds approximately $98\%$ of the time, with failures arising from output budget overruns or malformed JSON responses.
 
@@ -559,7 +559,7 @@ If a model explicitly refuses to answer, or if both extraction stages fail, the 
 \subsection{Baseline Configurations}
 Four baseline conditions are evaluated to establish lower bounds and verify benchmark integrity. All baselines use the same answer extraction pipeline.
 
-The text-only baseline is the most critical integrity check. If any text-only model exceeds 20\% accuracy overall, the affected questions are flagged for manual review and potential removal from the evaluation set, following MMStar's multi-modal gain filtering procedure.
+The text-only baseline is the most critical integrity check. If any text-only model exceeds 20\% accuracy overall, the affected questions are flagged for manual review and potential removal from the evaluation set, following MMStar's \cite{mmstar} multi-modal gain filtering procedure.
 
 \subsection{Reproducibility and Access}
 All evaluation code, prompt templates, answer extraction scripts, and model inference configurations are released publicly.
@@ -592,7 +592,7 @@ All evaluation code, prompt templates, answer extraction scripts, and model infe
 \midrule
 GPT-5.4 & 897 & 0.4961 & 0.0329 & 0.0078 & 0.1081 & 0.0100 \\
 Qwen3-VL-8B & 897 & 0.3233 & 0.0258 & 0.0067 & 0.0502 & 0.0145 \\
-Gemini 3.1 Flash Lite & 254 & 0.6496 & 0.0796 & 0.0197 & 0.1929 & 0.0394 \\
+Gemini 3.1 Flash & 254 & 0.6496 & 0.0796 & 0.0197 & 0.1929 & 0.0394 \\
 Molmo2-8B & 450 & 0.6756 & 0.1011 & 0.0356 & 0.2378 & 0.0644 \\
 \midrule
 \textbf{Human} & 100 & \textbf{0.9124} & \textbf{0.8245} & \textbf{0.7631} & \textbf{0.9218} & \textbf{0.7829} \\
@@ -623,7 +623,7 @@ To assess the degree to which models exploit dataset shortcuts rather than perfo
 \hline
 \textbf{Model} & \textbf{$\leq$20 min} & \textbf{20--40 min} & \textbf{40--60 min} & \textbf{$>$60 min} \\ \hline
 Molmo2-8B & 70.0\% / 0.143 & 66.7\% / 0.095 & 67.0\% / 0.067 & 63.9\% / 0.041 \\
-Gemini 3.1 Flash Lite & 66.2\% / 0.081 & 66.7\% / 0.056 & 54.8\% / 0.146 & 66.7\% / 0.032 \\
+Gemini 3.1 Flash  & 66.2\% / 0.081 & 66.7\% / 0.056 & 54.8\% / 0.146 & 66.7\% / 0.032 \\
 GPT-5.4 & 53.0\% / 0.039 & 45.9\% / 0.022 & 46.9\% / 0.032 & 48.6\% / 0.032 \\
 Qwen3-VL-8B & 32.3\% / 0.017 & 28.5\% / 0.025 & 40.1\% / 0.050 & 27.0\% / 0.021 \\ \hline
 \end{tabular}
